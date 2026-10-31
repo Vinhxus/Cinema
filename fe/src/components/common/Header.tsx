@@ -1,4 +1,4 @@
-import Logo from '../components/Logo'
+import Logo from './Logo'
 import {Bell, User2} from 'lucide-react'
 
 export default function Header() {
