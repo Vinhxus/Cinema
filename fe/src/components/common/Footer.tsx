@@ -1,6 +1,6 @@
 import Logo from './Logo'
-import Badge from './MovieComponents/Badge';
-import type { AgeRating } from './MovieComponents/MovieCard';
+import Badge from '../MovieComponents/Badge';
+import type { AgeRating } from '../MovieComponents/MovieCard';
 
 const AGE_STYLE: Record<AgeRating, string> = {
   P: "bg-emerald-600 text-white",

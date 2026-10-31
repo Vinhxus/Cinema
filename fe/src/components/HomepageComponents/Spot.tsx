@@ -1,4 +1,4 @@
-import dune from './assets/dune.png'
+import dune from '../../assets/dune.png'
 
 const Spot = () => {
   return (
