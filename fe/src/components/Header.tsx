@@ -3,7 +3,7 @@ import {Bell, User2} from 'lucide-react'
 
 export default function Header() {
   return (
-    <div className="sticky top-0 z-50 w-full h-20 bg-[#FFFFFF] flex border-b items-center justify-start gap-16 px-10">
+    <div className="sticky top-0 z-50 w-full h-20 bg-[#FFFFFF] flex border-b items-center justify-between gap-16 px-10">
         <div className="text-3xl flex gap-2 ml-4 ">
         <Logo/>
         <span>
