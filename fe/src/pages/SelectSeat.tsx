@@ -31,7 +31,7 @@ const coupleSeats: SeatData[] = [
   { id: 'J02', row: 'J', label: 'J02', type: 'couple', isBooked: false },
 ]
 
-const seats = [...normalSeats, ...coupleSeats]
+const seats = [...normalSeats, ...coupleSeats] //integrate normal and couple seats into one array
 
 const SelectSeat = () => {
   return (
