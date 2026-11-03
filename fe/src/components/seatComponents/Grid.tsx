@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Seat, SeatType, SeatStatus } from './Seat'
+import { useBooking } from '../../context/useBooking'
 
 export interface SeatData {
   id: string
@@ -12,10 +13,25 @@ export interface SeatData {
 interface GridProps {
   seats: SeatData[]
   selected: string[]
-  onToggle: (id: string) => void
+  onToggle: (id: string) => boolean
 }
 
-export const Grid = ({ seats, selected, onToggle }: GridProps) => {
+const MAX_SEATS = 8 // khai báo biến riêng
+
+export const Grid = ({ seats, onToggle }: GridProps) => {
+  const [message, setMessage] = useState('')
+  const {isSelected, } = useBooking()
+
+  const handleClick = (id: string) => {
+    const ok = onToggle(id)
+    setMessage(ok ? '' : `You can only select ${MAX_SEATS} seats`)
+  }
+  // Tự tắt thông báo sau 3 giây
+  useEffect(() => {
+    if (!message) return
+    const t = setTimeout(() => setMessage(''), 3000)
+    return () => clearTimeout(t)
+  }, [message])
 
   const rows = useMemo(() => {
     const map = new Map<string, SeatData[]>()
@@ -29,12 +45,17 @@ export const Grid = ({ seats, selected, onToggle }: GridProps) => {
 
   return (
     <div className="flex flex-col items-center gap-2 overflow-x-auto">
+      {message && (
+        <p role="alert" className="font-semibold text-red-600">
+          {message}
+        </p>
+      )}
       {rows.map(([row, rowSeats]) => (
         <div key={row} className="flex justify-center gap-2">
           {rowSeats.map(seat => {
             const status: SeatStatus = seat.isBooked
               ? 'unavailable'
-              : selected.includes(seat.id)
+              : isSelected(seat.id)
               ? 'selected'
               : 'available'
 
@@ -43,7 +64,7 @@ export const Grid = ({ seats, selected, onToggle }: GridProps) => {
                 key={seat.id}
                 type={seat.type}
                 status={status}
-                onClick={() => onToggle(seat.id)}
+                onClick={() => handleClick(seat.id)}
               >
                 {seat.label}
               </Seat>

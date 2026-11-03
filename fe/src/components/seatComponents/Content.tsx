@@ -6,6 +6,8 @@ interface ContentProps {
 }
 
 const Content = ( {selectedSeats, totalPrice}: ContentProps ) => {
+    const count = selectedSeats.length
+    
     const seatText = selectedSeats.length
     ? selectedSeats.map(s => s.label).join(', ')
     : '—'
@@ -27,7 +29,8 @@ const Content = ( {selectedSeats, totalPrice}: ContentProps ) => {
             <div className="w-64 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Room: Cinema 1</div>
             <div className="w-56 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">
                 Seat: {seatText}
-            </div>            
+            </div>         
+            {count} {count <= 1 ? 'seat' : 'seats'} selected   
             <div className="w-72 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">
                 Price: {totalPrice.toLocaleString('vi-VN')} vnđ 
             </div>

@@ -4,26 +4,23 @@ import { SeatData } from '../components/seatComponents/Grid'
 import { Price } from '../data/Price'
 import { BookingContext } from './useBooking'
 
+const MAX_SEATS = 8 // khai báo biến riêng
+
 // trong kho có những gì:
 export interface BookingContextValue {
-  selectedIds: string[]            // id các ghế đang chọn: ['G11', 'G12']
-  selectedSeats: SeatData[]        // đối tượng ghế đầy đủ (có label, type...)
-  seatsTotal: number               // tổng tiền ghế
-  toggleSeat: (id: string) => void // hàm chọn/bỏ chọn ghế
-  clearSeats: () => void           // hàm xóa hết (dùng sau khi thanh toán)
+    isSelected: (id: string) => boolean
+    selectedIds: string[]            // id các ghế đang chọn: ['G11', 'G12']
+    selectedSeats: SeatData[]        // đối tượng ghế đầy đủ (có label, type...)
+    seatsTotal: number               // tổng tiền ghế
+    toggleSeat: (id: string) => boolean // hàm chọn/bỏ chọn ghế
+    clearSeats: () => void           // hàm xóa hết (dùng sau khi thanh toán)
 }
 
 //Provider
 export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const [selectedIds, setSelectedIds] = useState<string[]>([])
-
-    const toggleSeat = (id: string) =>
-    setSelectedIds(prev =>
-        prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    )
-
-    const clearSeats = () => setSelectedIds([])
-
+    const isSelected = (id: string) => selectedIds.includes(id)
+    
     const selectedSeats = useMemo(
         () => seats.filter(seat => selectedIds.includes(seat.id)),
         [selectedIds]
@@ -34,9 +31,23 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         [selectedSeats]
     )
 
+    const toggleSeat = (id: string): boolean => {
+        const isSelected = selectedIds.includes(id)
+
+        // Ghế mới mà đã đủ 8 → chặn, báo thất bại
+        if (!isSelected && selectedIds.length >= MAX_SEATS) return false
+
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+        )
+        return true
+    }
+
+    const clearSeats = () => setSelectedIds([])
+
     return (
         <BookingContext.Provider
-            value={{ selectedIds, selectedSeats, seatsTotal, toggleSeat, clearSeats }}
+            value={{ isSelected ,selectedIds, selectedSeats, seatsTotal, toggleSeat, clearSeats }}
         >
             {children}
         </BookingContext.Provider>

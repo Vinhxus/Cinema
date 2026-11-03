@@ -4,13 +4,13 @@ export type SeatType = 'standard' | 'vip' | 'couple'
 export type SeatStatus = 'available' | 'selected' | 'unavailable'
 
 const TYPE_STYLES: Record<SeatType, string> = {
-  standard: 'bg-slate-50 border-4 border-lime-400 text-black',
-  vip: 'bg-slate-50 border-4 border-[#FF4B4B] text-black',
-  couple: 'w-26 bg-[#F06DC2] border-4 border-[#D53C3C] text-white', // ~2 ghế + gap
+  standard: 'bg-slate-50 border-4 border-lime-400 text-black cursor-pointer',
+  vip: 'bg-slate-50 border-4 border-[#FF4B4B] text-black cursor-pointer',
+  couple: 'w-26 bg-[#F06DC2] border-4 border-[#D53C3C] text-white cursor-pointer', // ~2 ghế + gap
 }
 
 const STATUS_STYLES: Record<Exclude<SeatStatus, 'available'>, string> = {
-  selected: 'bg-[#FFCC00] text-black',
+  selected: 'bg-[#FFCC00] text-black cursor-pointer',
   unavailable: 'bg-[#979EA6] border-4 border-[#EC911A] text-black cursor-not-allowed',
 }
 

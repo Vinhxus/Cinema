@@ -20,7 +20,7 @@ const SelectSeat = () => {
             <div className="flex gap-5 justify-around items-center w-full">
                 <Card/>
                 <Content selectedSeats={selectedSeats} totalPrice={seatsTotal} />
-                <Continue/>
+                <Continue disabled={selectedIds.length === 0} />
             </div>
         </div>
         <div className="flex flex-col items-center justify-start gap-5 w-max">
