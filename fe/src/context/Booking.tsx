@@ -1,7 +1,7 @@
 import { ReactNode, useMemo, useState } from 'react'
 import { seats } from '../data/seats'
 import { SeatData } from '../components/seatComponents/Grid'
-import { Price } from '../components/seatComponents/Price'
+import { Price } from '../data/Price'
 import { BookingContext } from './useBooking'
 
 // trong kho có những gì:
@@ -13,8 +13,6 @@ export interface BookingContextValue {
   clearSeats: () => void           // hàm xóa hết (dùng sau khi thanh toán)
 }
 
-//storage
-
 //Provider
 export const BookingProvider = ({ children }: { children: ReactNode }) => {
     const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -24,24 +22,24 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     )
 
-  const clearSeats = () => setSelectedIds([])
+    const clearSeats = () => setSelectedIds([])
 
-   const selectedSeats = useMemo(
-    () => seats.filter(seat => selectedIds.includes(seat.id)),
-    [selectedIds]
-  )
+    const selectedSeats = useMemo(
+        () => seats.filter(seat => selectedIds.includes(seat.id)),
+        [selectedIds]
+    )
 
-  const seatsTotal = useMemo(
-    () => selectedSeats.reduce((sum, seat) => sum + Price[seat.type], 0),
-    [selectedSeats]
-  )
+    const seatsTotal = useMemo(
+        () => selectedSeats.reduce((sum, seat) => sum + Price[seat.type], 0),
+        [selectedSeats]
+    )
 
-  return (
-    <BookingContext.Provider
-      value={{ selectedIds, selectedSeats, seatsTotal, toggleSeat, clearSeats }}
-    >
-      {children}
-    </BookingContext.Provider>
-  )
+    return (
+        <BookingContext.Provider
+            value={{ selectedIds, selectedSeats, seatsTotal, toggleSeat, clearSeats }}
+        >
+            {children}
+        </BookingContext.Provider>
+    )
 }
 

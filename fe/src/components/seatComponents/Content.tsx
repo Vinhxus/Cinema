@@ -10,7 +10,7 @@ const Content = ( {selectedSeats, totalPrice}: ContentProps ) => {
     ? selectedSeats.map(s => s.label).join(', ')
     : '—'
   return (
-    <div className="w-[860px] inline-flex justify-between items-center">
+    <div className="w-215 inline-flex justify-between items-center">
     <div className="w-34 inline-flex flex-col justify-start items-start">
         <div className="self-stretch h-6 justify-center text-black text-xl font-bold font-['Space_Grotesk'] leading-6">DUNE: PART 2</div>
         <div className="self-stretch h-5 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">2D</div>
@@ -18,10 +18,10 @@ const Content = ( {selectedSeats, totalPrice}: ContentProps ) => {
             <div className="self-stretch h-3 justify-center text-white text-[10px] font-bold font-['Space_Grotesk'] uppercase leading-4 tracking-wide">C18</div>
         </div>
     </div>
-    <div className="w-[700px] flex justify-start items-start">
+    <div className="w-181.25 flex justify-start items-start">
         <div className="w-96 h-20 inline-flex flex-col justify-center items-start gap-1 overflow-hidden">
-            <div className="w-[725px] h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Cinema: Hung Vuong plaza</div>
-            <div className="w-[725px] h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Showtime: 16:10, 11/10/2026</div>
+            <div className="w-181.25 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Cinema: Hung Vuong plaza</div>
+            <div className="w-181.25 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Showtime: 16:10, 11/10/2026</div>
         </div>
         <div className="w-96 inline-flex flex-col justify-start items-start gap-1 overflow-hidden">
             <div className="w-64 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Room: Cinema 1</div>
