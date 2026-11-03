@@ -1,6 +1,14 @@
-import React from 'react'
+import { SeatData } from './Grid'
 
-const Content = () => {
+interface ContentProps {
+  selectedSeats: SeatData[]
+  totalPrice: number
+}
+
+const Content = ( {selectedSeats, totalPrice}: ContentProps ) => {
+    const seatText = selectedSeats.length
+    ? selectedSeats.map(s => s.label).join(', ')
+    : '—'
   return (
     <div className="w-[860px] inline-flex justify-between items-center">
     <div className="w-34 inline-flex flex-col justify-start items-start">
@@ -17,8 +25,12 @@ const Content = () => {
         </div>
         <div className="w-96 inline-flex flex-col justify-start items-start gap-1 overflow-hidden">
             <div className="w-64 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Room: Cinema 1</div>
-            <div className="w-56 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Seat: G11, G12 (standard)</div>
-            <div className="w-72 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Price: 220.000 vnđ</div>
+            <div className="w-56 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">
+                Seat: {seatText}
+            </div>            
+            <div className="w-72 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">
+                Price: {totalPrice.toLocaleString('vi-VN')} vnđ 
+            </div>
         </div>
     </div>
 </div>

@@ -9,7 +9,6 @@ const TYPE_STYLES: Record<SeatType, string> = {
   couple: 'w-26 bg-[#F06DC2] border-4 border-[#D53C3C] text-white', // ~2 ghế + gap
 }
 
-
 const STATUS_STYLES: Record<Exclude<SeatStatus, 'available'>, string> = {
   selected: 'bg-[#FFCC00] text-black',
   unavailable: 'bg-[#979EA6] border-4 border-[#EC911A] text-black cursor-not-allowed',

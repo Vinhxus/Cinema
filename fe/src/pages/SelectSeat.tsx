@@ -5,35 +5,13 @@ import Header from "../components/common/Header"
 import Content from "../components/seatComponents/Content"
 import Card from "../components/seatComponents/Card"
 import {UpNote, BotNote} from "../components/seatComponents/Note"
-import {SeatData, Grid} from '../components/seatComponents/Grid'
+import {Grid} from '../components/seatComponents/Grid'
+import { seats } from "../data/seats" 
 import { SubFooter } from "../components/seatComponents/SubFooter"
-
-const normalRows = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-
-const bookedIds = ['C05', 'C06', 'C07', 'C12', 'C13', 'C14']
-const vipIds = ['C08', 'C09', 'C10']
-
-const normalSeats: SeatData[] = normalRows.flatMap(row =>
-  Array.from({ length: 14 }, (_, i): SeatData => {
-    const id = `${row}${String(i + 1).padStart(2, '0')}`
-    return {
-      id,
-      row,
-      label: id,
-      type: vipIds.includes(id) ? 'vip' : 'standard',
-      isBooked: bookedIds.includes(id),
-    }
-  })
-)
-
-const coupleSeats: SeatData[] = [
-  { id: 'J01', row: 'J', label: 'J01', type: 'couple', isBooked: false },
-  { id: 'J02', row: 'J', label: 'J02', type: 'couple', isBooked: false },
-]
-
-const seats = [...normalSeats, ...coupleSeats]
+import { useBooking } from "../context/useBooking"
 
 const SelectSeat = () => {
+  const { selectedIds, selectedSeats, seatsTotal, toggleSeat } = useBooking()
   return (
     <div className="w-full flex flex-col items-center justify-start gap-5 ">
         <Header/>
@@ -41,7 +19,7 @@ const SelectSeat = () => {
             <Step/>
             <div className="flex gap-5 justify-around items-center w-full">
                 <Card/>
-                <Content/>
+                <Content selectedSeats={selectedSeats} totalPrice={seatsTotal} />
                 <Continue/>
             </div>
         </div>
@@ -50,7 +28,7 @@ const SelectSeat = () => {
             <Screen/>
             <BotNote/>
         </div>
-        <Grid seats={seats}/>      
+        <Grid seats={seats} selected={selectedIds} onToggle={toggleSeat} />     
         <SubFooter/>  
     </div>
   )
