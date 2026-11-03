@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Seat, SeatType, SeatStatus } from './Seat'
 
 export interface SeatData {
@@ -9,13 +9,13 @@ export interface SeatData {
   isBooked: boolean
 }
 
-export const Grid = ({ seats }: { seats: SeatData[] }) => {
-  const [selected, setSelected] = useState<string[]>([])
+interface GridProps {
+  seats: SeatData[]
+  selected: string[]
+  onToggle: (id: string) => void
+}
 
-  const toggle = (id: string) =>
-    setSelected(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    )
+export const Grid = ({ seats, selected, onToggle }: GridProps) => {
 
   const rows = useMemo(() => {
     const map = new Map<string, SeatData[]>()
@@ -43,7 +43,7 @@ export const Grid = ({ seats }: { seats: SeatData[] }) => {
                 key={seat.id}
                 type={seat.type}
                 status={status}
-                onClick={() => toggle(seat.id)}
+                onClick={() => onToggle(seat.id)}
               >
                 {seat.label}
               </Seat>

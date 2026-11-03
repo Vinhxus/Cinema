@@ -5,6 +5,10 @@ import {
   GlassWater, Minus, Plus, Sandwich, ShieldCheck, ShoppingBag, Sparkles, Star,
   Store, Tag, Utensils, X,
 } from "lucide-react";
+import { useBooking } from "../context/useBooking";
+import { SeatType } from "../components/seatComponents/Seat";
+import { Price } from "../components/seatComponents/Price";
+import { Navigate } from "react-router-dom";
 
 const IMG = {
   logo: "/assets/logo.svg",
@@ -126,8 +130,6 @@ const STEPS = [
   { label: "Step5", title: "Detail" },
 ];
 
-const SEAT_PRICE = 140000;
-const SEAT_COUNT = 2;
 const VIP_DISCOUNT_RATE = 0.1;
 const HOLD_SECONDS = 4 * 60 + 54;
 
@@ -250,6 +252,7 @@ function ComboCard({ combo, qty, onChange }: { combo: Combo; qty: number; onChan
 
 /* ------------------------------ Page ------------------------------ */
 export default function FoodPage() {
+  const { selectedSeats, seatsTotal } = useBooking();
   const [category, setCategory] = useState<"all" | Category>("all");
   const [qty, setQty] = useState<Record<string, number>>({ "super-star": 1 });
   const [seconds, setSeconds] = useState(HOLD_SECONDS);
@@ -261,19 +264,25 @@ export default function FoodPage() {
 
   const visible = category === "all" ? COMBOS : COMBOS.filter((c) => c.category === category);
   const selected = COMBOS.filter((c) => (qty[c.id] ?? 0) > 0);
+  // Gom ghế theo loại để hiển thị: "G11, G12 (standard)  110.000 × 2"
+  const seatGroups = useMemo(() => {
+    const map = new Map<SeatType, string[]>();
+    selectedSeats.forEach((s) => map.set(s.type, [...(map.get(s.type) ?? []), s.label]));
+    return Array.from(map, ([type, labels]) => ({ type, labels }));
+  }, [selectedSeats]);
+
   const totals = useMemo(() => {
-    const seats = SEAT_PRICE * SEAT_COUNT;
     const fb = selected.reduce((sum, c) => sum + c.price * (qty[c.id] ?? 0), 0);
     const discount = Math.round(fb * VIP_DISCOUNT_RATE);
-    const total = seats + fb - discount;
-    return { seats, fb, discount, total, points: Math.floor(total / 10000) };
-  }, [selected, qty]);
+    const total = seatsTotal + fb - discount;
+    return { seats: seatsTotal, fb, discount, total, points: Math.floor(total / 10000) };
+  }, [selected, qty, seatsTotal]);
 
   const setQuantity = (id: string, q: number) => setQty((prev) => ({ ...prev, [id]: q }));
   const itemCount = selected.reduce((n, c) => n + (qty[c.id] ?? 0), 0);
   const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
   const ss = String(seconds % 60).padStart(2, "0");
-
+   if (selectedSeats.length === 0) return <Navigate to="/select-seat" replace />;
   return (
     <div className="font-['Outfit',sans-serif]">
       <div className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-col bg-[#f8f9ff]">
@@ -386,16 +395,20 @@ export default function FoodPage() {
               <div className="flex flex-col gap-1.5 border-b border-slate-100 pb-[13px]">
                 <div className="flex items-center justify-between text-xs font-bold leading-4 text-gray-900">
                   <span className="flex items-center gap-1.5">
-                    <Armchair size={14} className="text-amber-600" /> Seats ({SEAT_COUNT} Selected)
+                    <Armchair size={14} className="text-amber-600" /> Seats ({selectedSeats.length} Selected)
                   </span>
                   <span>{vnd(totals.seats)}</span>
                 </div>
-                <div className="flex items-center justify-between pl-5 text-[11px] leading-[16.5px] text-gray-500">
-                  <span>Rows G8, G9 (VIP Sweet Spot)</span>
-                  <span>
-                    {vnd(SEAT_PRICE)} × {SEAT_COUNT}
-                  </span>
-                </div>
+                {seatGroups.map((g) => (
+                  <div key={g.type} className="flex items-center justify-between pl-5 text-[11px] leading-[16.5px] text-gray-500">
+                    <span>
+                      {g.labels.join(", ")} ({g.type})
+                    </span>
+                    <span>
+                      {vnd(Price[g.type])} × {g.labels.length}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               {/* F&B */}
