@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/common/Header";
+import Footer from "../components/common/Footer";
 import MovieHero from "../components/MovieDetail/MovieHero";
 import ShowtimeSelector from "../components/MovieDetail/ShowtimeSelector";
 import MovieRatingsAndCast from "../components/MovieDetail/MovieRatingsAndCast";
@@ -62,13 +63,13 @@ export default function MovieDetail() {
       {/* Breadcrumb */}
       <nav className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-1.5 px-6 py-2.5 font-['Outfit'] text-[11px] text-slate-500">
-          <a href="#" className="transition hover:text-slate-900">
+          <Link to="/" className="transition hover:text-slate-900">
             Home
-          </a>
+          </Link>
           <ChevronRight className="h-3 w-3 text-slate-300" />
-          <a href="#" className="transition hover:text-slate-900">
+          <Link to="/" className="transition hover:text-slate-900">
             Now Showing
-          </a>
+          </Link>
           <ChevronRight className="h-3 w-3 text-slate-300" />
           <span className="font-semibold text-slate-800">{MOVIE_DETAIL.subtitle}</span>
         </div>
