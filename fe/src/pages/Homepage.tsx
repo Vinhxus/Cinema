@@ -1,8 +1,8 @@
 import MovieList from '../components/MovieComponents/MovieList'
-import Header from '../components/Header'
-import SubHead from '../Subhead'
-import Footer from '../components/Footer'
-import Spot from '../Spot'
+import Header from '../components/common/Header'
+import SubHead from '../components/HomepageComponents/Subhead'
+import Footer from '../components/common/Footer'
+import Spot from '../components/HomepageComponents/Spot'
 
 function Homepage() {
   return (
