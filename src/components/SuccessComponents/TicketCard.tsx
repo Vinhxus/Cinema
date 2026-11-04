@@ -1,7 +1,10 @@
 import React from 'react';
-import { CheckCircle2, Copy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Copy, Ticket, ArrowRight } from 'lucide-react';
 
 export default function TicketCard() {
+    const navigate = useNavigate();
+
     const copyBookingRef = () => {
         navigator.clipboard.writeText('CV-2024-88492X');
         alert('Đã sao chép mã vé: CV-2024-88492X');
@@ -32,6 +35,7 @@ export default function TicketCard() {
                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">BOOKING REFERENCE:</span>
                     <span className="font-mono font-black text-amber-400 text-sm tracking-wide">CV-2024-88492X</span>
                     <button
+                        type="button"
                         onClick={copyBookingRef}
                         className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition cursor-pointer ml-1 bg-gray-800/80 px-1.5 py-0.5 rounded"
                     >
@@ -146,13 +150,13 @@ export default function TicketCard() {
                                     Alex Nguyen • <span className="text-amber-600 font-bold">CineClub Gold Tier</span>
                                 </p>
                                 <p className="text-[9px] text-gray-500 mt-0.5">
-                                    Total Paid: <strong className="text-gray-800">390,000 ₫</strong> via VNPay QR (VNP-994287)
+                                    Total Paid: <strong className="text-gray-800">390,000 ₫</strong> via MoMo E-Wallet
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* NỬA PHẢI: MÃ QR SOÁT VÉ & BARCODE (Chiếm 4 phần) */}
+                    {/* NỬA PHẢI: MÃ QR SOÁT VÉ & NÚT TICKET DETAILS */}
                     <div className="md:col-span-4 p-6 flex flex-col items-center justify-between bg-white text-center">
                         <div className="w-full flex items-center justify-between text-xs pb-3 border-b border-gray-100">
                             <span className="text-red-600 font-black tracking-wider flex items-center gap-1 text-sm">
@@ -161,41 +165,35 @@ export default function TicketCard() {
                             <span className="text-[9px] font-mono text-gray-400 font-bold">GATE 01</span>
                         </div>
 
-                        {/* Khung mã QR quét cửa */}
+                        {/* Khung mã QR soát vé (chuẩn vé cửa, không logo thanh toán) */}
                         <div className="my-4 p-3 bg-white border border-gray-200 rounded-xl shadow-sm relative">
                             <div className="w-36 h-36 relative flex items-center justify-center">
-                                {/* SVG mã QR */}
-                                <svg className="w-full h-full" viewBox="0 0 100 100" fill="currentColor">
-                                    <rect x="5" y="5" width="26" height="26" rx="4" fill="#000" />
+                                <svg className="w-full h-full text-black" viewBox="0 0 100 100" fill="currentColor">
+                                    <rect x="5" y="5" width="26" height="26" rx="4" />
                                     <rect x="9" y="9" width="18" height="18" rx="2" fill="#fff" />
-                                    <rect x="13" y="13" width="10" height="10" rx="1" fill="#000" />
+                                    <rect x="13" y="13" width="10" height="10" rx="1" />
 
-                                    <rect x="69" y="5" width="26" height="26" rx="4" fill="#000" />
+                                    <rect x="69" y="5" width="26" height="26" rx="4" />
                                     <rect x="73" y="9" width="18" height="18" rx="2" fill="#fff" />
-                                    <rect x="77" y="13" width="10" height="10" rx="1" fill="#000" />
+                                    <rect x="77" y="13" width="10" height="10" rx="1" />
 
-                                    <rect x="5" y="69" width="26" height="26" rx="4" fill="#000" />
+                                    <rect x="5" y="69" width="26" height="26" rx="4" />
                                     <rect x="9" y="73" width="18" height="18" rx="2" fill="#fff" />
-                                    <rect x="13" y="77" width="10" height="10" rx="1" fill="#000" />
+                                    <rect x="13" y="77" width="10" height="10" rx="1" />
 
-                                    <rect x="38" y="10" width="6" height="6" fill="#000" />
-                                    <rect x="48" y="14" width="6" height="6" fill="#000" />
-                                    <rect x="40" y="26" width="6" height="6" fill="#000" />
-                                    <rect x="52" y="28" width="6" height="6" fill="#000" />
-                                    <rect x="12" y="44" width="6" height="6" fill="#000" />
-                                    <rect x="24" y="50" width="6" height="6" fill="#000" />
-                                    <rect x="40" y="62" width="6" height="6" fill="#000" />
-                                    <rect x="52" y="68" width="6" height="6" fill="#000" />
-                                    <rect x="70" y="44" width="6" height="6" fill="#000" />
-                                    <rect x="84" y="48" width="6" height="6" fill="#000" />
-                                    <rect x="70" y="68" width="8" height="8" fill="#000" />
-                                    <rect x="82" y="78" width="6" height="6" fill="#000" />
+                                    <rect x="38" y="10" width="6" height="6" />
+                                    <rect x="48" y="14" width="6" height="6" />
+                                    <rect x="40" y="26" width="6" height="6" />
+                                    <rect x="52" y="28" width="6" height="6" />
+                                    <rect x="12" y="44" width="6" height="6" />
+                                    <rect x="24" y="50" width="6" height="6" />
+                                    <rect x="40" y="62" width="6" height="6" />
+                                    <rect x="52" y="68" width="6" height="6" />
+                                    <rect x="70" y="44" width="6" height="6" />
+                                    <rect x="84" y="48" width="6" height="6" />
+                                    <rect x="70" y="68" width="8" height="8" />
+                                    <rect x="82" y="78" width="6" height="6" />
                                 </svg>
-
-                                {/* Logo SENEMA mini ở trung tâm QR */}
-                                <div className="absolute w-7 h-7 bg-amber-500 rounded-md flex items-center justify-center text-[9px] font-black text-black shadow-md border border-white">
-                                    SE
-                                </div>
                             </div>
                         </div>
 
@@ -218,6 +216,19 @@ export default function TicketCard() {
                             <span className="font-mono text-[9px] text-gray-500 tracking-widest mt-1">
                                 6919-2814-43201
                             </span>
+                        </div>
+
+                        {/* Nút Ticket Details (thay cho Download Ticket, loại bỏ Share & Print) */}
+                        <div className="w-full mt-4 pt-3 border-t border-gray-100">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/ticket-details')}
+                                className="w-full py-2.5 px-4 bg-[#f59e0b] hover:bg-[#d97706] active:scale-[0.98] text-black font-black rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-md shadow-amber-500/20 cursor-pointer uppercase tracking-wider"
+                            >
+                                <Ticket className="w-4 h-4 stroke-[2.5]" />
+                                <span>Ticket Details</span>
+                                <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                            </button>
                         </div>
                     </div>
 

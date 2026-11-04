@@ -15,7 +15,7 @@ export const PaymentStepper: React.FC<PaymentStepperProps> = ({ currentStep = 4 
   ];
 
   return (
-    <div className="w-full bg-[#0d121c] border-b border-gray-800/80 px-6 py-3 flex items-center justify-center text-xs">
+    <div className="w-full bg-[#0d121c] border-b border-gray-800/80 px-6 py-3 flex items-center justify-center text-xs select-none">
       <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto py-1">
         {steps.map((step, idx) => {
           const isFinished = step.id < currentStep;
@@ -36,7 +36,7 @@ export const PaymentStepper: React.FC<PaymentStepperProps> = ({ currentStep = 4 
                 </div>
               )}
 
-              {/* Current Active Step (Red) */}
+              {/* Current Active Step */}
               {isCurrent && (
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-[#e50914] text-white flex items-center justify-center font-bold text-xs shadow-md shadow-red-900/40">
@@ -72,3 +72,5 @@ export const PaymentStepper: React.FC<PaymentStepperProps> = ({ currentStep = 4 
     </div>
   );
 };
+
+export default PaymentStepper;

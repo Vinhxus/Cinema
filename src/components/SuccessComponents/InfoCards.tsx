@@ -11,7 +11,7 @@ export default function InfoCards() {
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => navigate('/payment')}
+                        onClick={() => navigate('/homepage')}
                         className="bg-[#f59e0b] hover:bg-amber-600 active:scale-95 text-black font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 shadow transition cursor-pointer"
                     >
                         <span>⟵ Back to Home</span>

@@ -1,22 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Armchair, Popcorn, CupSoda, Lock, ShieldAlert, PhoneCall } from 'lucide-react';
 
 export const OrderSummary: React.FC = () => {
     const navigate = useNavigate();
 
+    // 1. Logic đếm ngược 10 phút (600 giây)
+    const [secondsLeft, setSecondsLeft] = useState<number>(600);
+
+    useEffect(() => {
+        if (secondsLeft <= 0) {
+            // Hết thời gian giữ ghế tự động chuyển sang trang Failure
+            navigate('/failure');
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setSecondsLeft((prev) => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [secondsLeft, navigate]);
+
+    const minutes = Math.floor(secondsLeft / 60);
+    const seconds = secondsLeft % 60;
+    const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    // Cảnh báo khi còn dưới 2 phút
+    const isUrgent = secondsLeft < 120;
+
     return (
         <div className="w-full max-w-[420px] mx-auto space-y-3 font-sans text-gray-200">
-            {/* 1. SEAT HOLD TIMER (Thanh cam có ô thời gian bo góc chuẩn mẫu) */}
-            <div className="bg-[#f59e0b] text-black px-3.5 py-1.5 rounded-lg font-bold flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-black">
-                    <span className="w-1.5 h-1.5 rounded-full bg-black" />
-                    <span>SEAT HOLD TIMER</span>
+            {/* 1. SEAT HOLD TIMER (Nền kính tối hài hòa, hiệu ứng nhấp nháy thực tế) */}
+            <div
+                className={`w-full rounded-xl px-4 py-2 flex items-center justify-between border transition-all duration-300 shadow-lg ${isUrgent
+                    ? 'bg-rose-950/30 border-rose-500/40 shadow-rose-950/20'
+                    : 'bg-[#141a26]/90 border-amber-500/30 shadow-black/40 backdrop-blur-md'
+                    }`}
+            >
+                {/* Trạng thái đếm giữ ghế */}
+                <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                        <span
+                            className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isUrgent ? 'bg-rose-400' : 'bg-amber-400'
+                                }`}
+                        />
+                        <span
+                            className={`relative inline-flex rounded-full h-2 w-2 ${isUrgent ? 'bg-rose-500' : 'bg-amber-500'
+                                }`}
+                        />
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-300">
+                        Seat Hold Timer
+                    </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 font-mono text-xs bg-black/15 px-2.5 py-0.5 rounded-md font-black">
+                {/* Ô hiển thị đồng hồ số */}
+                <div
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono font-bold text-xs tracking-wider transition-colors ${isUrgent
+                        ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 animate-pulse'
+                        : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                        }`}
+                >
                     <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>09:45</span>
+                    <span>{formattedTime}</span>
                 </div>
             </div>
 
@@ -54,7 +101,10 @@ export const OrderSummary: React.FC = () => {
                 <div className="space-y-2 pt-2.5 border-t border-gray-800/80 text-xs">
                     <div className="flex items-center justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wider">
                         <span>SELECTED SEATS & ADD-ONS</span>
-                        <button className="text-amber-500 hover:text-amber-400 text-[10px] font-semibold transition underline underline-offset-2 cursor-pointer">
+                        <button
+                            type="button"
+                            className="text-amber-500 hover:text-amber-400 text-[10px] font-semibold transition underline underline-offset-2 cursor-pointer"
+                        >
                             edit items
                         </button>
                     </div>
@@ -140,7 +190,7 @@ export const OrderSummary: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Nút Proceed to Payment đỏ rực rỡ có icon khóa và mũi tên chuẩn mẫu */}
+                {/* Nút Proceed to Payment */}
                 <div className="pt-2">
                     <button
                         type="button"
