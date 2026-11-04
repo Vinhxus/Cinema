@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Badge from "./Badge";
 
 export type AgeRating = "P" | "C13" | "C16" | "C18";
@@ -27,7 +28,12 @@ interface MovieCardProps {
 
 export function MovieCard({ movie }: MovieCardProps) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md ">
+    <Link
+      to="/movie"
+      title={`Xem chi tiết: ${movie.title}`}
+      className="group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+    >
+    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md ">
       {/* Poster */}
       <div className="relative aspect-3/4 w-full overflow-hidden bg-linear-to-b from-slate-800 to-slate-950">
         {movie.poster && (
@@ -78,5 +84,6 @@ export function MovieCard({ movie }: MovieCardProps) {
         </div>
       </div>
     </article>
+    </Link>
   );
 }

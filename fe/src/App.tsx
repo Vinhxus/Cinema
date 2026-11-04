@@ -9,6 +9,7 @@ import Showtimes from './pages/Showtimes'
 import SeatingAndPricing from './pages/SeatingAndPricing'
 import TicketCheckIn from './pages/TicketCheckIn'
 import { BookingProvider } from './context/Booking'
+import MovieDetail from './pages/MovieDetail'  
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/select-seat" element={<SelectSeat />} />
         <Route path="/food" element={<FoodPage />} />
+        <Route path="/movie" element={<MovieDetail />} />        
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
