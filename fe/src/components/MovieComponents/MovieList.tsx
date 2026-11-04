@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import {Movie, MovieCard} from "./MovieCard";
+import { MovieCard, type Movie } from "./MovieCard";
 
 /* ---------- Types ---------- */
 type TabKey = "now" | "upcoming";

@@ -1,9 +1,9 @@
-import Homepage from "./pages/Homepage"
+import MovieDetail from "./pages/MovieDetail"
 
 function App() {
   return (
-    <div className="w-full bg-[#FFFFFF] flex border items-center justify-start">
-      <Homepage/>
+    <div className="w-full bg-[#FFFFFF]">
+      <MovieDetail/>
     </div>
   )
 }
