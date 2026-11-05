@@ -19,7 +19,7 @@ export default function InfoCards() {
 
                     <button
                         onClick={() => window.print()}
-                        className="bg-[#1b2230] hover:bg-gray-800 active:scale-95 text-gray-200 border border-gray-700 font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+                        className="bg-payment-div hover:bg-gray-800 active:scale-95 text-gray-200 border border-gray-700 font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
                     >
                         <Download className="w-3.5 h-3.5 text-amber-500" />
                         <span>Download Ticket (PDF)</span>
@@ -50,7 +50,7 @@ export default function InfoCards() {
             {/* 3 Thẻ Tiện ích & Hướng dẫn */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 {/* Card 1: Arrival Guidelines */}
-                <div className="bg-[#10141e] border border-gray-800 rounded-xl p-4 space-y-2">
+                <div className="bg-payment-div border border-gray-800 rounded-xl p-4 space-y-2">
                     <div className="flex items-center gap-2 text-amber-500 font-bold text-xs">
                         <Clock className="w-4 h-4" />
                         <span>Arrival Guidelines</span>
@@ -64,7 +64,7 @@ export default function InfoCards() {
                 </div>
 
                 {/* Card 2: Accessibility & Parking */}
-                <div className="bg-[#10141e] border border-gray-800 rounded-xl p-4 space-y-2">
+                <div className="bg-payment-div border border-gray-800 rounded-xl p-4 space-y-2">
                     <div className="flex items-center gap-2 text-blue-400 font-bold text-xs">
                         <Accessibility className="w-4 h-4" />
                         <span>Accessibility & Parking</span>
@@ -78,7 +78,7 @@ export default function InfoCards() {
                 </div>
 
                 {/* Card 3: CineConcierge Hotline */}
-                <div className="bg-[#10141e] border border-gray-800 rounded-xl p-4 space-y-2">
+                <div className="bg-payment-div border border-gray-800 rounded-xl p-4 space-y-2">
                     <div className="flex items-center gap-2 text-red-500 font-bold text-xs">
                         <Headphones className="w-4 h-4" />
                         <span>CineConcierge Hotline</span>

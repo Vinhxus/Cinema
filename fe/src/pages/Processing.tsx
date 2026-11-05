@@ -9,9 +9,9 @@ export default function Processing() {
     const navigate = useNavigate();
 
     return (
-        <div className="processing-page-root min-h-screen bg-white flex flex-col font-sans select-none text-gray-900">
+        <div className="processing-page-root min-h-screen bg-white flex flex-col pay-font-primary select-none pay-text-primary">
             {/* Header with white background and subtle border */}
-            <div className="w-full text-gray-900 bg-white border-b border-gray-100">
+            <div className="w-full pay-text-primary bg-white border-b border-gray-100">
                 <Header />
             </div>
 
@@ -20,8 +20,8 @@ export default function Processing() {
 
             {/* Mode Switcher toolbar (Light theme) */}
             <div className="w-full flex justify-center py-3">
-                <div className="bg-gray-50 border border-gray-200 rounded-full p-1 flex items-center gap-1.5 text-xs font-semibold shadow-sm select-none">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase pl-2.5 pr-2 border-r border-gray-200">
+                <div className="pay-card border border-gray-300 rounded-full p-1 flex items-center gap-1.5 text-xs font-semibold shadow-sm select-none">
+                    <span className="text-[10px] font-bold pay-text-secondary uppercase pl-2.5 pr-2 border-r border-gray-200">
                         ⚙ MODE
                     </span>
 
@@ -29,7 +29,7 @@ export default function Processing() {
                     <button
                         type="button"
                         onClick={() => navigate('/payment')}
-                        className="px-3 py-1 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-200/70 transition cursor-pointer text-[11px]"
+                        className="px-3 py-1 rounded-full pay-text-secondary hover:opacity-70 hover:bg-gray-200 transition cursor-pointer text-[11px]"
                     >
                         1. Payment
                     </button>
@@ -42,7 +42,7 @@ export default function Processing() {
 
                     {/* 3. Timed Out: Status badge */}
                     <span
-                        className="px-3 py-1 rounded-full text-gray-400 opacity-60 cursor-not-allowed text-[11px]"
+                        className="px-3 py-1 rounded-full pay-text-secondary opacity-60 cursor-not-allowed text-[11px]"
                         title="Automatically activates when holding time expires"
                     >
                         3. Timed Out

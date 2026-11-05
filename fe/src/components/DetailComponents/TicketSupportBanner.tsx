@@ -6,13 +6,13 @@ export const TicketSupportBanner: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="w-full bg-[#10141d] border border-gray-800 rounded-2xl px-5 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl select-none">
+        <div className="w-full pay-card pay-font-primary border border-gray-300 rounded-2xl px-5 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm select-none">
             {/* Hotline bên trái */}
-            <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                <PhoneCall className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <div className="flex items-center gap-2.5 text-xs pay-text-secondary pay-font-secondary">
+                <PhoneCall className="w-4 h-4 text-amber-600 flex-shrink-0" />
                 <span>
                     Need assistance? Customer Hotline 24/7:{' '}
-                    <strong className="text-white font-mono text-sm tracking-wide">1900 8888</strong>
+                    <strong className="pay-text-primary font-mono text-sm tracking-wide">1900 8888</strong>
                 </span>
             </div>
 
@@ -21,7 +21,7 @@ export const TicketSupportBanner: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => window.print()}
-                    className="px-4 py-2 rounded-xl bg-gray-900 border border-gray-700/80 hover:bg-gray-800 text-xs font-semibold text-gray-300 transition cursor-pointer active:scale-95 shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-white border border-gray-300 hover:bg-gray-100 text-xs font-semibold pay-text-primary transition cursor-pointer active:scale-95 shadow-sm"
                 >
                     Print Ticket
                 </button>
@@ -30,7 +30,7 @@ export const TicketSupportBanner: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => navigate('/refund')}
-                    className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-xs font-bold text-rose-400 transition cursor-pointer active:scale-95 shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-rose-50 border border-rose-300 hover:bg-rose-100 text-xs font-bold text-rose-600 transition cursor-pointer active:scale-95 shadow-sm"
                 >
                     Request Cancellation / Refund
                 </button>

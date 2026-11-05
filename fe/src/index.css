@@ -1,1 +1,9 @@
 @import 'tailwindcss';
+
+:root {
+  --bg-payment-div: #f3f4f6; /* nền các khối div */
+  --color-payment-primary: #111827; /* chữ chính */
+  --font-payment-primary: 'Inter', system-ui, sans-serif;
+  --color-payment-secondary: #6b7280; /* chữ phụ */
+  --font-payment-secondary: 'Inter', system-ui, sans-serif;
+}

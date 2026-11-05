@@ -24,9 +24,9 @@ export default function Successfull() {
   }, [countdown, navigate]);
 
   return (
-    <div className="success-page-root min-h-screen bg-white flex flex-col font-sans select-none text-gray-900">
+    <div className="success-page-root min-h-screen bg-white flex flex-col pay-font-primary select-none pay-text-primary">
       {/* Header đồng bộ nền trắng */}
-      <div className="w-full text-gray-900 bg-white border-b border-gray-100">
+      <div className="w-full pay-text-primary bg-white border-b border-gray-100">
         <Header />
       </div>
 
