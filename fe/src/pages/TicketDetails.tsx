@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { TicketHeaderActions } from '../components/DetailCoponents/TicketHeaderActions';
-import { MainTicketCard } from '../components/DetailCoponents/MainTicketCard';
-import { CancellationPolicy } from '../components/DetailCoponents/CancellationPolicy';
-import { TheaterLocationMap } from '../components/DetailCoponents/TheaterLocationMap';
-import { TicketSupportBanner } from '../components/DetailCoponents/TicketSupportBanner';
+import Header from '../components/common/Header';
+import Footer from '../components/common/Footer';
+import { TicketHeaderActions } from '../components/DetailComponents/TicketHeaderActions';
+import { MainTicketCard } from '../components/DetailComponents/MainTicketCard';
+import { CancellationPolicy } from '../components/DetailComponents/CancellationPolicy';
+import { TheaterLocationMap } from '../components/DetailComponents/TheaterLocationMap';
+import { TicketSupportBanner } from '../components/DetailComponents/TicketSupportBanner';
 
 export default function TicketDetails() {
     const navigate = useNavigate();
