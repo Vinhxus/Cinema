@@ -11,7 +11,7 @@ export const RefundStepper: React.FC = () => {
     ];
 
     return (
-        <div className="w-full bg-[#0d121c] border-b border-gray-800/80 py-3.5 flex items-center justify-center text-xs select-none">
+        <div className="w-full pay-card pay-font-primary border-b border-gray-300 py-3.5 flex items-center justify-center text-xs select-none">
             <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto py-1 px-4 max-w-full">
                 {steps.map((step, idx) => {
                     const isFinished = step.id <= 4;
@@ -22,12 +22,12 @@ export const RefundStepper: React.FC = () => {
                             {/* Các bước trước đó đã xong */}
                             {isFinished && (
                                 <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-[#1e2330] border border-gray-600 flex items-center justify-center text-white">
+                                    <div className="w-6 h-6 rounded-full bg-[var(--color-payment-primary)] flex items-center justify-center text-white">
                                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                                     </div>
                                     <div className="flex flex-col text-left">
-                                        <span className="text-[9px] text-gray-400 font-medium leading-none">{step.label}</span>
-                                        <span className="text-xs text-gray-200 font-semibold">{step.name}</span>
+                                        <span className="text-[9px] pay-text-secondary font-medium leading-none">{step.label}</span>
+                                        <span className="text-xs pay-text-secondary font-semibold">{step.name}</span>
                                     </div>
                                 </div>
                             )}
@@ -39,14 +39,14 @@ export const RefundStepper: React.FC = () => {
                                         5
                                     </div>
                                     <div className="flex flex-col text-left">
-                                        <span className="text-[9px] text-amber-500 font-black leading-none uppercase">{step.label}</span>
-                                        <span className="text-xs text-white font-bold">{step.name}</span>
+                                        <span className="text-[9px] text-amber-700 font-black leading-none uppercase">{step.label}</span>
+                                        <span className="text-xs pay-text-primary font-bold">{step.name}</span>
                                     </div>
                                 </div>
                             )}
 
                             {idx < steps.length - 1 && (
-                                <div className="w-8 h-[1px] bg-gray-700/80 hidden sm:block" />
+                                <div className="w-8 h-[1px] bg-gray-300 hidden sm:block" />
                             )}
                         </div>
                     );

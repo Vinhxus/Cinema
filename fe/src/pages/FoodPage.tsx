@@ -8,7 +8,7 @@ import {
 import { useBooking } from "../context/useBooking";
 import { SeatType } from "../components/seatComponents/Seat";
 import { Price } from "../data/Price";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const IMG = {
   logo: "/assets/logo.svg",
@@ -256,7 +256,7 @@ export default function FoodPage() {
   const [category, setCategory] = useState<"all" | Category>("all");
   const [qty, setQty] = useState<Record<string, number>>({ "super-star": 1 });
   const [seconds, setSeconds] = useState(HOLD_SECONDS);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(t);
@@ -483,6 +483,7 @@ export default function FoodPage() {
                 <button
                   type="button"
                   className="cursor-pointer flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-600 text-xs font-bold text-white shadow-sm hover:bg-red-700"
+                  onClick={() => navigate('/payment', { replace: true })}
                 >
                   CONTINUE TO CHECKOUT <ArrowRight size={11} />
                 </button>

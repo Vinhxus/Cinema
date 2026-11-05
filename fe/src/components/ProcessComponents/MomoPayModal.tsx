@@ -31,41 +31,41 @@ export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }
     const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
     return (
-        <div className="w-full max-w-[500px] bg-[#10141d] border border-gray-800 rounded-2xl p-6 shadow-2xl font-sans relative text-gray-200">
+        <div className="w-full max-w-[500px] pay-card pay-font-primary pay-text-primary border border-gray-300 rounded-2xl p-6 shadow-sm relative">
             {/* Nút đóng */}
             {onClose && (
                 <button
                     type="button"
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition p-1 rounded-lg hover:bg-gray-800 cursor-pointer"
+                    className="absolute top-4 right-4 pay-text-secondary hover:opacity-70 transition p-1 rounded-lg hover:bg-gray-200 cursor-pointer"
                 >
                     <X className="w-5 h-5" />
                 </button>
             )}
 
             {/* Header Modal MoMo */}
-            <div className="flex items-center gap-3.5 pb-4 border-b border-gray-800">
+            <div className="flex items-center gap-3.5 pb-4 border-b border-gray-300">
                 <img
                     src={momoLogo}
                     alt="MoMo Logo"
                     className="w-11 h-11 rounded-2xl object-cover shadow-md shadow-[#A50064]/20 flex-shrink-0"
                 />
                 <div>
-                    <h2 className="text-white font-bold text-base leading-tight">Cổng Thanh Toán MoMo</h2>
-                    <p className="text-xs text-gray-400">Quét mã QR bằng ứng dụng MoMo để thanh toán</p>
+                    <h2 className="pay-text-primary font-bold text-base leading-tight">MoMo Payment Gateway</h2>
+                    <p className="text-xs pay-text-secondary">Scan the QR code with the MoMo app to pay</p>
                 </div>
             </div>
 
             {/* Thông tin số tiền & đếm ngược */}
-            <div className="mt-4 bg-[#0a0d14] border border-gray-800/80 rounded-xl p-3 flex items-center justify-between">
+            <div className="mt-4 bg-white border border-gray-300 rounded-xl p-3 flex items-center justify-between">
                 <div>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">Số tiền thanh toán</span>
+                    <span className="text-[10px] pay-text-secondary uppercase font-bold tracking-wider block">Amount to pay</span>
                     <span className="text-xl font-black text-[#A50064] font-mono">390,000 ₫</span>
                 </div>
 
                 <div className="text-right">
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">Thời gian giữ vé</span>
-                    <div className="flex items-center gap-1 font-mono font-bold text-amber-400 text-sm">
+                    <span className="text-[10px] pay-text-secondary uppercase font-bold tracking-wider block">Ticket hold time</span>
+                    <div className="flex items-center gap-1 font-mono font-bold text-amber-700 text-sm">
                         <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
                         <span>{formattedTime}</span>
                     </div>
@@ -119,24 +119,24 @@ export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }
                     </div>
                 </div>
 
-                <p className="text-[11px] text-gray-400 mt-3 text-center">
-                    Sử dụng App <strong>MoMo</strong> hoặc ứng dụng Camera có hỗ trợ QR để quét mã
+                <p className="text-[11px] pay-text-secondary mt-3 text-center">
+                    Use the <strong>MoMo</strong> app or any QR-enabled camera app to scan the code
                 </p>
             </div>
 
             {/* Thông tin đơn hàng */}
-            <div className="bg-[#0b0f17] border border-gray-800/60 rounded-xl p-3 text-xs space-y-1.5 mb-5">
-                <div className="flex justify-between text-gray-400">
-                    <span>Nhà cung cấp:</span>
-                    <span className="text-white font-medium">SENEMA Cinema HCMC</span>
+            <div className="bg-white border border-gray-300 rounded-xl p-3 text-xs space-y-1.5 mb-5">
+                <div className="flex justify-between pay-text-secondary">
+                    <span>Merchant:</span>
+                    <span className="pay-text-primary font-medium">SENEMA Cinema HCMC</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
-                    <span>Mã đơn hàng:</span>
-                    <span className="font-mono text-gray-200 font-bold">MOMO-2024-88492X</span>
+                <div className="flex justify-between pay-text-secondary">
+                    <span>Order ID:</span>
+                    <span className="font-mono pay-text-primary font-bold">MOMO-2024-88492X</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
-                    <span>Phim & Suất chiếu:</span>
-                    <span className="text-gray-200">Dune 2 • 20:15 (Ghế F12, F13)</span>
+                <div className="flex justify-between pay-text-secondary">
+                    <span>Movie & Showtime:</span>
+                    <span className="pay-text-primary">Dune 2 • 20:15 (Seats F12, F13)</span>
                 </div>
             </div>
 
@@ -146,17 +146,15 @@ export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }
                 onClick={onSuccess}
                 className="w-full bg-[#A50064] hover:bg-[#880052] active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase tracking-wide transition shadow-lg shadow-[#A50064]/30 cursor-pointer"
             >
-                <span> 
-                    Tôi đã hoàn tất thanh toán
-                </span>
+                <span>I have completed the payment</span>
 
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
 
             {/* Cam kết bảo mật */}
-            <div className="mt-4 flex items-center justify-center gap-1.5 text-[10px] text-gray-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Giao dịch được bảo vệ và mã hóa bởi MoMo Payment Security</span>
+            <div className="mt-4 flex items-center justify-center gap-1.5 text-[10px] pay-text-secondary">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Transaction protected and encrypted by MoMo Payment Security</span>
             </div>
         </div>
     );

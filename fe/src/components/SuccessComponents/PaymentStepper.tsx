@@ -11,7 +11,7 @@ export default function PaymentStepper() {
     ];
 
     return (
-        <div className="w-full bg-[#0d121c] border-b border-gray-800/80 px-6 py-2.5 flex items-center justify-center text-xs">
+        <div className="w-full pay-card pay-font-primary border-b border-gray-300 px-6 py-2.5 flex items-center justify-center text-xs">
             <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto py-1">
                 {steps.map((step, idx) => {
                     const isFinished = step.id < 5;
@@ -26,8 +26,8 @@ export default function PaymentStepper() {
                                         <Check className="w-3 h-3 stroke-[3]" />
                                     </div>
                                     <div className="flex flex-col text-left">
-                                        <span className="text-[9px] text-gray-400 font-medium leading-tight">{step.label}</span>
-                                        <span className="text-[11px] text-gray-200 font-semibold">{step.name}</span>
+                                        <span className="text-[9px] pay-text-secondary font-medium leading-tight">{step.label}</span>
+                                        <span className="text-[11px] pay-text-secondary font-semibold">{step.name}</span>
                                     </div>
                                 </div>
                             )}
@@ -40,7 +40,7 @@ export default function PaymentStepper() {
                                     </div>
                                     <div className="flex flex-col text-left">
                                         <span className="text-[9px] text-[#e50914] font-bold leading-tight">{step.label}</span>
-                                        <span className="text-[11px] text-white font-bold">{step.name}</span>
+                                        <span className="text-[11px] pay-text-secondary font-bold">{step.name}</span>
                                     </div>
                                 </div>
                             )}

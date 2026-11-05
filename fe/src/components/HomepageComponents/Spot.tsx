@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import dune from '../../assets/dune.png'
 
 const Spot = () => {
+    const navigate = useNavigate();
   return (
     <div className="w-full self-stretch px-10 pb-32 flex flex-col justify-end items-start h-200 mt-10 bg-center"
     style={{ backgroundImage: `url(${dune})` }}>
@@ -66,7 +68,10 @@ const Spot = () => {
                     <div className="inline-flex flex-col justify-start items-start">
                         <div className="w-3.5 h-3 bg-white" />
                     </div>
-                    <div className="justify-center text-white text-sm font-bold font-['Space_Grotesk'] uppercase leading-4 tracking-wide">BOOK NOW</div>
+                    <button 
+                        className="cursor-pointer justify-center text-white text-sm font-bold font-['Space_Grotesk'] uppercase leading-4 tracking-wide"
+                        onClick={() => {navigate('/movie')}}
+                    >BOOK NOW</button>
                 </div>
                 <div className="px-5 py-3.5 bg-white/20 rounded-xl outline outline-1 outline-offset-[-1px] outline-white/20 backdrop-blur-[6px] flex justify-start items-center gap-2">
                     <div className="inline-flex flex-col justify-start items-center">

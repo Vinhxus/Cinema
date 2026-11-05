@@ -14,7 +14,7 @@ export const FailureStepper: React.FC = () => {
     ];
 
     return (
-        <div className="w-full bg-[#0d121c] border-b border-gray-800/80 py-3 flex flex-col items-center justify-center text-xs space-y-3 select-none">
+        <div className="w-full pay-card pay-font-primary border-b border-gray-300 py-3 flex flex-col items-center justify-center text-xs space-y-3 select-none">
             {/* 1. Progress Steps Bar */}
             <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto py-1 px-4 max-w-full">
                 {steps.map((step, idx) => {
