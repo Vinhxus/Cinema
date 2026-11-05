@@ -11,57 +11,16 @@ export default function Refund() {
     // Đếm ngược ngầm 15 giây (15000ms) rồi tự động quay về homepage
     useEffect(() => {
         const timer = setTimeout(() => {
-            navigate('/homepage');
+            navigate('/');
         }, 15000);
 
         return () => clearTimeout(timer);
     }, [navigate]);
 
     return (
-        <div className="refund-page-root min-h-screen bg-[#070B12] flex flex-col font-sans select-none text-gray-200">
-            {/* Ép CSS Header & Footer đồng bộ nền trắng */}
-            <style>{`
-        .refund-page-root > div:first-child button,
-        .refund-page-root > div:first-child span:not(.font-bold) {
-          color: #1f2937 !important;
-        }
-
-        .refund-page-root footer,
-        .refund-page-root > div:last-child {
-          background-color: #ffffff !important;
-          border-top: 1px solid #e5e7eb !important;
-        }
-
-        .refund-page-root footer *,
-        .refund-page-root > div:last-child * {
-          color: #4b5563 !important;
-        }
-
-        .refund-page-root footer h4,
-        .refund-page-root > div:last-child h4 {
-          color: #111827 !important;
-          font-weight: 700 !important;
-        }
-
-        .refund-page-root footer strong,
-        .refund-page-root > div:last-child strong {
-          color: #dc2626 !important;
-        }
-
-        .refund-page-root footer span[class*="bg-emerald"],
-        .refund-page-root > div:last-child span[class*="bg-emerald"],
-        .refund-page-root footer span[class*="bg-amber"],
-        .refund-page-root > div:last-child span[class*="bg-amber"],
-        .refund-page-root footer span[class*="bg-orange"],
-        .refund-page-root > div:last-child span[class*="bg-orange"],
-        .refund-page-root footer span[class*="bg-red"],
-        .refund-page-root > div:last-child span[class*="bg-red"] {
-          color: #ffffff !important;
-        }
-      `}</style>
-
-            {/* Header */}
-            <div className="w-full text-gray-900 bg-white border-b border-gray-200">
+        <div className="refund-page-root min-h-screen bg-white flex flex-col font-sans select-none text-gray-900">
+            {/* Header đồng bộ nền trắng */}
+            <div className="w-full text-gray-900 bg-white border-b border-gray-100">
                 <Header />
             </div>
 
@@ -74,7 +33,7 @@ export default function Refund() {
             </main>
 
             {/* Footer */}
-            <div className="w-full mt-auto">
+            <div className="w-full mt-auto border-t border-gray-100">
                 <Footer />
             </div>
         </div>
