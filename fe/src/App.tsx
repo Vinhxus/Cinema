@@ -2,12 +2,21 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Homepage from './pages/Homepage'
 import SelectSeat from './pages/SelectSeat'
 import FoodPage from './pages/FoodPage'
+
+import Payment from './pages/Payment'
+import Processing from './pages/Processing'
+import Successfull from './pages/Successfull'
+import Failure from './pages/Failure'
+import Refund from './pages/Refund'
+import TicketDetails from './pages/TicketDetails'
+
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import MovieManagement from './pages/MovieManagement'
 import Showtimes from './pages/Showtimes'
 import SeatingAndPricing from './pages/SeatingAndPricing'
 import TicketCheckIn from './pages/TicketCheckIn'
+
 import { BookingProvider } from './context/Booking'
 import MovieDetail from './pages/MovieDetail'  
 
@@ -15,11 +24,20 @@ function App() {
   return (
     <BookingProvider>
       <Routes>
+        {/* User Booking Flow */}
         <Route path="/" element={<Homepage />} />
         <Route path="/select-seat" element={<SelectSeat />} />
         <Route path="/food" element={<FoodPage />} />
         <Route path="/movie" element={<MovieDetail />} />        
 
+        {/* Payment & Ticket Flow */}
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/processing" element={<Processing />} />
+        <Route path="/success" element={<Successfull />} />
+        <Route path="/failure" element={<Failure />} />
+        <Route path="/refund" element={<Refund />} />
+        <Route path="/ticket-details" element={<TicketDetails />} />
+        
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
