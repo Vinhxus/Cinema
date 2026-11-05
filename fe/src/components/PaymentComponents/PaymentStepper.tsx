@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Clock } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export const PaymentStepper: React.FC = () => {
     const steps = [
@@ -11,7 +11,8 @@ export const PaymentStepper: React.FC = () => {
     ];
 
     return (
-        <div className="w-full bg-[#0a0e17] border-b border-gray-800/80 px-4 sm:px-8 py-3 flex items-center justify-center text-xs font-sans">
+        <div className="w-full bg-[#0a0e17] border-b border-gray-800/80 px-4 sm:px-8 py-3 flex items-center justify-between text-xs font-sans">
+
             {/* Danh sách các bước */}
             <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto py-0.5">
                 {steps.map((step, idx) => {
@@ -23,7 +24,9 @@ export const PaymentStepper: React.FC = () => {
                             {/* Bước đã xong (1, 2): Nền trắng, dấu tích đen */}
                             {isFinished && (
                                 <div className="flex items-center gap-2">
-                                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center gap-20 text-black flex-shrink-0 shadow-sm">
+
+                                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-black flex-shrink-0 shadow-sm">
+
                                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                                     </div>
                                     <div className="flex flex-col text-left">
@@ -67,7 +70,6 @@ export const PaymentStepper: React.FC = () => {
                     );
                 })}
             </div>
-
         </div>
     );
 };
