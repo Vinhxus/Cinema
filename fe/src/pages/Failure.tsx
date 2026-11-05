@@ -11,46 +11,16 @@ export default function Failure() {
     // Đếm ngược ngầm 15 giây tự chuyển về homepage
     useEffect(() => {
         const timer = setTimeout(() => {
-            navigate('/homepage');
+            navigate('/');
         }, 15000);
 
         return () => clearTimeout(timer);
     }, [navigate]);
 
     return (
-        <div className="failure-page-root min-h-screen bg-[#070B12] flex flex-col font-sans select-none text-gray-200">
-            {/* Đồng bộ Header & Footer nền trắng chữ rõ nét */}
-            <style>{`
-        .failure-page-root > div:first-child button,
-        .failure-page-root > div:first-child span:not(.font-bold) {
-          color: #1f2937 !important;
-        }
-
-        .failure-page-root footer,
-        .failure-page-root > div:last-child {
-          background-color: #ffffff !important;
-          border-top: 1px solid #e5e7eb !important;
-        }
-
-        .failure-page-root footer *,
-        .failure-page-root > div:last-child * {
-          color: #4b5563 !important;
-        }
-
-        .failure-page-root footer h4,
-        .failure-page-root > div:last-child h4 {
-          color: #111827 !important;
-          font-weight: 700 !important;
-        }
-
-        .failure-page-root footer strong,
-        .failure-page-root > div:last-child strong {
-          color: #dc2626 !important;
-        }
-      `}</style>
-
-            {/* Header */}
-            <div className="w-full text-gray-900 bg-white border-b border-gray-200">
+        <div className="failure-page-root min-h-screen bg-white flex flex-col font-sans select-none text-gray-900">
+            {/* Header đồng bộ nền trắng */}
+            <div className="w-full text-gray-900 bg-white border-b border-gray-100">
                 <Header />
             </div>
 
@@ -63,7 +33,7 @@ export default function Failure() {
             </main>
 
             {/* Footer */}
-            <div className="w-full mt-auto">
+            <div className="w-full mt-auto border-t border-gray-100">
                 <Footer />
             </div>
         </div>
