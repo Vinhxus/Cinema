@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useBooking } from "../context/useBooking";
 import { SeatType } from "../components/seatComponents/Seat";
-import { Price } from "../components/seatComponents/Price";
+import { Price } from "../data/Price";
 import { Navigate } from "react-router-dom";
 
 const IMG = {
@@ -282,7 +282,10 @@ export default function FoodPage() {
   const itemCount = selected.reduce((n, c) => n + (qty[c.id] ?? 0), 0);
   const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
   const ss = String(seconds % 60).padStart(2, "0");
-   if (selectedSeats.length === 0) return <Navigate to="/select-seat" replace />;
+  if (selectedSeats.length === 0) {
+    window.alert("Please select at least one seat before continuing.");
+    return <Navigate to="/select-seat" replace />;
+  }
   return (
     <div className="font-['Outfit',sans-serif]">
       <div className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-col bg-[#f8f9ff]">

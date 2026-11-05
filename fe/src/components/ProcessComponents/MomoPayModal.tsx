@@ -146,7 +146,10 @@ export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }
                 onClick={onSuccess}
                 className="w-full bg-[#A50064] hover:bg-[#880052] active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase tracking-wide transition shadow-lg shadow-[#A50064]/30 cursor-pointer"
             >
-                <span>Tôi đã hoàn tất thanh toán</span>
+                <span> 
+                    Tôi đã hoàn tất thanh toán
+                </span>
+
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
 
