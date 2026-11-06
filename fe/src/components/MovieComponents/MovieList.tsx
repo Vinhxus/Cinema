@@ -36,13 +36,13 @@ const UPCOMING: Movie[] = [
 ];
 
 const GENRES: string[] = [
-  "Tất cả thể loại",
-  "Hành động",
-  "Khoa học viễn tưởng",
-  "Kinh dị / Huyền bí",
-  "Hoạt hình / Anime",
-  "Tâm lý - Tình cảm",
-  "Định dạng IMAX 3D",
+  "All Genres",
+  "Action",
+  "Science Fiction",
+  "Horror / Mystery",
+  "Animation / Anime",
+  "Psychological / Romantic",
+  "IMAX 3D",
 ];
 
 export default function MovieList() {
@@ -61,8 +61,8 @@ export default function MovieList() {
   }, [genre]);
 
   const tabs: TabItem[] = [
-    { key: "now", label: "Phim đang chiếu", count: NOW_SHOWING_COUNT },
-    { key: "upcoming", label: "Phim sắp chiếu", count: UPCOMING.length + 2 },
+    { key: "now", label: "Now showing", count: NOW_SHOWING_COUNT },
+    { key: "upcoming", label: "Upcoming", count: UPCOMING.length + 2 },
   ];
 
   return (
