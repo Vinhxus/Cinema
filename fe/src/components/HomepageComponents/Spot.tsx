@@ -1,8 +1,19 @@
 import { useNavigate } from 'react-router-dom';
 import dune from '../../assets/dune.png'
+import kong from '../../assets/kong.jpg'
+import exhuma from '../../assets/exhuma.jpg'
+import panda from '../../assets/panda.jpg'
+import { useState } from 'react';
+
+type Spotlight = 'Dune' | 'Kong' | 'Exhuma' | 'Panda' 
 
 const Spot = () => {
     const navigate = useNavigate();
+    const [select,setSelect] = useState<Spotlight>('Dune')
+    function handleSelect(key: Spotlight) {
+        setSelect(key)
+    }
+
   return (
     <div className="w-full self-stretch px-10 pb-32 flex flex-col justify-end items-start h-200 mt-10 bg-center"
     style={{ backgroundImage: `url(${dune})` }}>
@@ -94,9 +105,10 @@ const Spot = () => {
                 </div>
                 <div className="justify-center text-amber-400 text-[10px] font-semibold font-['Space_Grotesk'] uppercase leading-4 tracking-wide">IN THE SPOTLIGHT</div>
             </div>
-            <div className="self-stretch inline-flex justify-start items-center gap-2.5">
-                <div className="w-24 h-16 relative bg-white/0 rounded-lg shadow-[0px_0px_0px_2px_rgba(251,191,36,1.00)] inline-flex flex-col justify-center items-start overflow-hidden">
-                    <img className="self-stretch flex-1 relative" src="https://placehold.co/96x64" />
+            <div className="cursor-pointer self-stretch inline-flex justify-start items-center gap-2.5">
+                <div onClick={() => handleSelect('Dune')}
+                    className={`cursor-pointer w-24 h-16 relative rounded-lg inline-flex flex-col justify-center items-start overflow-hidden ${select === 'Dune' ? 'shadow-[0px_0px_0px_2px_rgba(251,191,36,1.00)]' : 'opacity-60'}`}>
+                    <img className="self-stretch flex-1 relative" src={dune} alt="Dune 2" />
                     <div className="w-24 h-16 left-0 top-0 absolute bg-slate-950/30" />
                     <div className="w-20 left-[6px] top-[47.50px] absolute flex flex-col justify-start items-start">
                         <div className="self-stretch h-3 relative overflow-hidden">
@@ -104,8 +116,9 @@ const Spot = () => {
                         </div>
                     </div>
                 </div>
-                <div className="w-24 h-16 relative opacity-60 rounded-lg inline-flex flex-col justify-center items-start overflow-hidden">
-                    <img className="self-stretch flex-1 relative" src="https://placehold.co/96x64" />
+                <div onClick={() => handleSelect('Kong')}
+                    className={`cursor-pointer w-24 h-16 relative rounded-lg inline-flex flex-col justify-center items-start overflow-hidden ${select === 'Kong' ? 'shadow-[0px_0px_0px_2px_rgba(251,191,36,1.00)]' : 'opacity-60'}`}>
+                    <img className="self-stretch flex-1 relative" src={kong} alt="Godzilla x Kong" />
                     <div className="w-24 h-16 left-0 top-0 absolute bg-slate-950/40" />
                     <div className="w-20 left-[6px] top-[47.50px] absolute flex flex-col justify-start items-start">
                         <div className="self-stretch h-3 relative overflow-hidden">
@@ -113,8 +126,9 @@ const Spot = () => {
                         </div>
                     </div>
                 </div>
-                <div className="w-24 h-16 relative opacity-60 rounded-lg inline-flex flex-col justify-center items-start overflow-hidden">
-                    <img className="self-stretch flex-1 relative" src="https://placehold.co/96x64" />
+                <div onClick={() => handleSelect('Exhuma')}
+                    className={`cursor-pointer w-24 h-16 relative rounded-lg inline-flex flex-col justify-center items-start overflow-hidden ${select === 'Exhuma' ? 'shadow-[0px_0px_0px_2px_rgba(251,191,36,1.00)]' : 'opacity-60'}`}>
+                    <img className="self-stretch flex-1 relative" src={exhuma} alt="Exhuma" />
                     <div className="w-24 h-16 left-0 top-0 absolute bg-slate-950/40" />
                     <div className="w-20 left-[6px] top-[47.50px] absolute flex flex-col justify-start items-start">
                         <div className="self-stretch h-3 relative overflow-hidden">
@@ -122,8 +136,9 @@ const Spot = () => {
                         </div>
                     </div>
                 </div>
-                <div className="w-24 h-16 relative opacity-60 rounded-lg inline-flex flex-col justify-center items-start overflow-hidden">
-                    <img className="self-stretch flex-1 relative" src="https://placehold.co/96x64" />
+                <div onClick={() => handleSelect('Panda')}
+                    className={`cursor-pointer w-24 h-16 relative rounded-lg inline-flex flex-col justify-center items-start overflow-hidden ${select === 'Panda' ? 'shadow-[0px_0px_0px_2px_rgba(251,191,36,1.00)]' : 'opacity-60'}`}>
+                    <img className="self-stretch flex-1 relative" src={panda} alt="Panda 4" />
                     <div className="w-24 h-16 left-0 top-0 absolute bg-slate-950/40" />
                     <div className="w-20 left-[6px] top-[47.50px] absolute flex flex-col justify-start items-start">
                         <div className="self-stretch h-3 relative overflow-hidden">
