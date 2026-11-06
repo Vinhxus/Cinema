@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react";
 import { MovieCard, type Movie } from "./MovieCard";
-
+import Dune from "../../assets/dune.png";
+import Kong from "../../assets/kong.jpg";
+import Exhuma from "../../assets/exhuma.jpg";
+import Panda from "../../assets/panda.jpg";
+import Mai from "../../assets/Mai.jpg";
+import Oppenheimer from "../../assets/oppenheimer.jpg";
+import Conan from "../../assets/conan.jpg";
+import Furiosa from "../../assets/furiosa.jpg";
+import Deadpool from "../../assets/deadpool.jpg";
+import InsideOut2 from "../../assets/insideout2.jpg";
 /* ---------- Types ---------- */
 type TabKey = "now" | "upcoming";
 
@@ -14,16 +23,16 @@ interface TabItem {
 const NOW_SHOWING_COUNT = 18;
 
 const UPCOMING: Movie[] = [
-  { id: 1, title: "Dune: Hành Tinh Cát 2", subtitle: "Dune: Part Two", age: "C18", tags: ["IMAX"], genre: "Khoa học viễn tưởng", formats: "2D • IMAX", rating: 8.9, poster: "" },
-  { id: 2, title: "Godzilla x Kong", subtitle: "The New Empire", age: "C13", tags: ["4DX"], genre: "Hành động, Quái thú", formats: "3D • 4DX", rating: 8.4, poster: "" },
-  { id: 3, title: "Exhuma: Quật Mộ Trùng Ma", subtitle: "Pamyo (2024)", age: "C18", tags: ["2D"], genre: "Kinh dị, Huyền bí", formats: "2D Lồng tiếng", rating: 8.7, poster: "" },
-  { id: 4, title: "Kung Fu Panda 4", subtitle: "DreamWorks Animation", age: "P", tags: ["3D"], genre: "Hoạt hình, Hài hước", formats: "2D • 3D", rating: 8.2, poster: "" },
-  { id: 5, title: "Mai (Phim Trấn Thành)", subtitle: "A Film by Tran Thanh", age: "C18", tags: ["2D"], genre: "Tâm lý, Tình cảm", formats: "2D Kỹ thuật số", rating: 8.1, poster: "" },
-  { id: 6, title: "Oppenheimer (Tái chiếu)", subtitle: "Christopher Nolan Film", age: "C18", tags: ["IMAX 70MM"], genre: "Tiểu sử, Lịch sử", formats: "IMAX GT Laser", rating: 9.1, poster: "" },
-  { id: 7, title: "Thám Tử Lừng Danh Conan", subtitle: "Ngôi Sao 5 Cánh 1 Triệu Đô", age: "P", tags: ["2D"], genre: "Anime, Trinh thám", formats: "2D • 4DX", rating: 8.8, poster: "" },
-  { id: 8, title: "Furiosa: Câu Chuyện Mad Max", subtitle: "A Mad Max Saga", age: "C18", tags: ["IMAX"], genre: "Hành động, Hậu tận thế", formats: "IMAX • ScreenX", rating: 8.5, poster: "" },
-  { id: 9, title: "Deadpool & Wolverine", subtitle: "Marvel Studios", age: "C18", tags: ["2D"], genre: "Hành động, Siêu anh hùng", formats: "3D • 4DX", rating: 8.8, poster: "" },
-  { id: 10, title: "Những Mảnh Ghép Cảm Xúc 2", subtitle: "Disney Pixar Inside Out 2", age: "P", tags: ["2D"], genre: "Hoạt hình, Gia đình", formats: "2D Lồng tiếng", rating: 8.9, poster: "" },
+  { id: 1, title: "Dune: Hành Tinh Cát 2", subtitle: "Dune: Part Two", age: "C18", tags: ["IMAX"], genre: "Khoa học viễn tưởng", formats: "2D • IMAX", rating: 8.9, poster: Dune },
+  { id: 2, title: "Godzilla x Kong", subtitle: "The New Empire", age: "C13", tags: ["4DX"], genre: "Hành động, Quái thú", formats: "3D • 4DX", rating: 8.4, poster: Kong },
+  { id: 3, title: "Exhuma: Quật Mộ Trùng Ma", subtitle: "Pamyo (2024)", age: "C18", tags: ["2D"], genre: "Kinh dị, Huyền bí", formats: "2D Lồng tiếng", rating: 8.7, poster: Exhuma },
+  { id: 4, title: "Kung Fu Panda 4", subtitle: "DreamWorks Animation", age: "P", tags: ["3D"], genre: "Hoạt hình, Hài hước", formats: "2D • 3D", rating: 8.2, poster: Panda },
+  { id: 5, title: "Mai (Phim Trấn Thành)", subtitle: "A Film by Tran Thanh", age: "C18", tags: ["2D"], genre: "Tâm lý, Tình cảm", formats: "2D Kỹ thuật số", rating: 8.1, poster: Mai },
+  { id: 6, title: "Oppenheimer (Tái chiếu)", subtitle: "Christopher Nolan Film", age: "C18", tags: ["IMAX 70MM"], genre: "Tiểu sử, Lịch sử", formats: "IMAX GT Laser", rating: 9.1, poster: Oppenheimer },
+  { id: 7, title: "Thám Tử Lừng Danh Conan", subtitle: "Ngôi Sao 5 Cánh 1 Triệu Đô", age: "P", tags: ["2D"], genre: "Anime, Trinh thám", formats: "2D • 4DX", rating: 8.8, poster: Conan },
+  { id: 8, title: "Furiosa: Câu Chuyện Mad Max", subtitle: "A Mad Max Saga", age: "C18", tags: ["IMAX"], genre: "Hành động, Hậu tận thế", formats: "IMAX • ScreenX", rating: 8.5, poster: Furiosa },
+  { id: 9, title: "Deadpool & Wolverine", subtitle: "Marvel Studios", age: "C18", tags: ["2D"], genre: "Hành động, Siêu anh hùng", formats: "3D • 4DX", rating: 8.8, poster: Deadpool },
+  { id: 10, title: "Những Mảnh Ghép Cảm Xúc 2", subtitle: "Disney Pixar Inside Out 2", age: "P", tags: ["2D"], genre: "Hoạt hình, Gia đình", formats: "2D Lồng tiếng", rating: 8.9, poster: InsideOut2 },
 ];
 
 const GENRES: string[] = [
@@ -42,6 +51,11 @@ export default function MovieList() {
 
   const movies = useMemo<Movie[]>(() => {
     if (genre === GENRES[0]) return UPCOMING;
+
+    if (genre === "Định dạng IMAX 3D") {
+      return UPCOMING.filter((m) => /imax|3d/i.test(m.formats));
+    }
+
     const keyword = genre.split(/[/-]/)[0].trim().toLowerCase();
     return UPCOMING.filter((m) => m.genre.toLowerCase().includes(keyword));
   }, [genre]);
