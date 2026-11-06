@@ -9,11 +9,18 @@ import { useBooking } from "../context/useBooking";
 import { SeatType } from "../components/seatComponents/Seat";
 import { Price } from "../data/Price";
 import { Navigate, useNavigate } from "react-router-dom";
+import food1 from "../assets/food1.jpg";
+import food2 from "../assets/food2.jpg";
+import food3 from "../assets/food3.jpg";
+import food4 from "../assets/food4.jpg";
+import food5 from "../assets/food5.jpg";
+import food6 from "../assets/food6.jpg";
+import dune from "../assets/dune.png";
 
 const IMG = {
   logo: "/assets/logo.svg",
   profile: "/assets/profile.png",
-  poster: "/assets/poster-dune.png",
+  poster: dune,
 };
 
 type Category = "popcorn" | "signature" | "snacks" | "beverages";
@@ -36,7 +43,7 @@ const COMBOS: Combo[] = [
     id: "super-star",
     name: "Super Star Combo",
     price: 115000,
-    image: "/assets/combo-1.png",
+    image: food1,
     desc: "1x Large Sweet Caramel Popcorn (85oz) + 2x Large Soft Drinks (32oz Coke/Sprite) + 1x Pack Crispy M&Ms Chocolate.",
     summary: "85oz Caramel + 2 Large Cokes",
     tags: ["Caramel", "For 2 People", "Free Refill"],
@@ -51,7 +58,7 @@ const COMBOS: Combo[] = [
     priceClass: "text-gray-900",
     name: "Solo Moviegoer Combo",
     price: 85000,
-    image: "/assets/combo-2.png",
+    image: food2,
     desc: "1x Medium Salted & Cheese Mixed Popcorn (60oz) + 1x Medium Chilled Drink (22oz Coke, Sprite, or Fanta).",
     summary: "60oz Mixed Popcorn + Medium Drink",
     tags: ["Cheese & Salt", "Single Serving"],
@@ -62,7 +69,7 @@ const COMBOS: Combo[] = [
     id: "golden-vip",
     name: "CineVerse Golden VIP Combo",
     price: 185000,
-    image: "/assets/combo-3.png",
+    image: food3,
     priceClass: "text-amber-600",
     desc: "1x Truffle & Sea Salt Gourmet Popcorn Tub + 2x Premium Bottled Mocktails / Juices + Gourmet Nachos with warm cheddar cheese dip.",
     summary: "Truffle Popcorn + 2 Mocktails + Nachos",
@@ -77,7 +84,7 @@ const COMBOS: Combo[] = [
     id: "dune-tub",
     name: "Dune: Spice Planet Exclusive Tub",
     price: 210000,
-    image: "/assets/combo-4.png",
+    image: food4,
     imgClass: "left-[1.28%] top-[-8.53%]",
     desc: "Limited Edition Sandworm Souvenir Popcorn Tin + 2x Collectible Character Tumblers with reusable stainless straws.",
     summary: "Sandworm Tin + 2 Tumblers",
@@ -93,7 +100,7 @@ const COMBOS: Combo[] = [
     priceClass: "text-gray-900",
     name: "Crispy Nachos & Cheese Platter",
     price: 75000,
-    image: "/assets/combo-5.png",
+    image: food5,
     desc: "Warm corn tortilla chips, spicy sliced jalapeño peppers, double-portion hot cheddar fondue & zesty salsa dip.",
     summary: "Nachos + Cheddar Fondue + Salsa",
     tags: ["Cheddar Fondue", "Salsa Fresca", "Served Hot"],
@@ -105,7 +112,7 @@ const COMBOS: Combo[] = [
     priceClass: "text-gray-900",
     name: "Sausage Duo & Soda",
     price: 95000,
-    image: "/assets/combo-6.png",
+    image: food6,
     desc: "2x Char-grilled German Bratwurst pork sausages with whole-grain honey mustard + 1x Large Fountain Beverage (32oz).",
     summary: "2 Bratwurst + Large Beverage",
     tags: ["Grilled", "High Protein"],
