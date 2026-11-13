@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Seat, SeatType, SeatStatus } from './Seat'
-
+import { Socket } from "../../Socket"
 export interface SeatData {
   id: string
   row: string
