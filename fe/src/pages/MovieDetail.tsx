@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useMemo, useRef, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -8,7 +8,9 @@ import ShowtimeSelector from "../components/MovieDetail/ShowtimeSelector";
 import MovieRatingsAndCast from "../components/MovieDetail/MovieRatingsAndCast";
 import BottomBookingBar from "../components/MovieDetail/BottomBookingBar";
 import type { BookingSelection } from "../components/MovieDetail/BottomBookingBar";
-import { CAST, CINEMAS, MOVIE_DETAIL, RATINGS, SHOW_DATES, TICKET_PRICE } from "../data/movieDetail";
+import { CINEMAS, RATINGS, SHOW_DATES, TICKET_PRICE, getMovieDetail } from "../data/movieDetail";
+import { useBooking } from "../context/useBooking";
+import type { ShowtimeInfo } from "../context/Booking";
 
 function findShowtimeById(showtimeId: string | null) {
   if (!showtimeId) return null;
@@ -28,6 +30,12 @@ export default function MovieDetail() {
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null);
   const showtimeSectionRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // Phim đã được MovieCard đưa vào context khi người dùng bấm vào card
+  const { movie: bookingMovie, showtime: bookingShowtime, selectShowtime } = useBooking();
+
+  // Toàn bộ nội dung trang được dựng từ phim đang lưu trong BookingContext
+  const detail = useMemo(() => (bookingMovie ? getMovieDetail(bookingMovie) : null), [bookingMovie]);
 
   const selectedDate = SHOW_DATES.find((date) => date.id === selectedDateId) ?? SHOW_DATES[0];
 
@@ -53,10 +61,28 @@ export default function MovieDetail() {
   };
 
   const handleBookNow = () => {
-  if (!selection) return;
-  navigate("/select-seat");
-};
+    if (!selection || !selectedShowtime) return;
 
+    const info: ShowtimeInfo = {
+      id: selectedShowtime.showtime.id,
+      time: selectedShowtime.showtime.startTime,
+      date: `${selectedDate.fullName}, ${selectedDate.day} ${selectedDate.month}`,
+      cinemaName: selectedShowtime.cinema.name,
+      hallName: selectedShowtime.showtime.hall,
+      price: selectedShowtime.showtime.price,
+    };
+
+    // selectShowtime luôn xóa ghế đã chọn, nên chỉ gọi khi thật sự đổi suất.
+    // Nhờ vậy quay lại từ trang chọn ghế rồi bấm Book Now vẫn giữ ghế cũ.
+    const isSameShowtime =
+      bookingShowtime?.id === info.id && bookingShowtime?.date === info.date;
+    if (!isSameShowtime) selectShowtime(info);
+
+    navigate("/select-seat");
+  };
+
+  // Vào thẳng /movie mà chưa chọn phim nào -> về trang chủ
+  if (!detail) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-slate-50 pb-24">
@@ -73,11 +99,11 @@ export default function MovieDetail() {
             Now Showing
           </Link>
           <ChevronRight className="h-3 w-3 text-slate-300" />
-          <span className="font-semibold text-slate-800">{MOVIE_DETAIL.subtitle}</span>
+          <span className="font-semibold text-slate-800">{detail.subtitle}</span>
         </div>
       </nav>
 
-      <MovieHero movie={MOVIE_DETAIL} />
+      <MovieHero movie={detail} />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-6">
         <div className="grid gap-5 lg:grid-cols-3">
@@ -92,14 +118,18 @@ export default function MovieDetail() {
             />
           </div>
 
-          <MovieRatingsAndCast movie={MOVIE_DETAIL} ratings={RATINGS} cast={CAST} />
+          <MovieRatingsAndCast
+            movie={detail}
+            ratings={{ ...RATINGS, audienceScore: detail.imdbScore }}
+            cast={detail.cast}
+          />
         </div>
       </main>
 
       <Footer />
 
       <BottomBookingBar
-        movie={MOVIE_DETAIL}
+        movie={detail}
         selection={selection}
         price={selectedShowtime ? selectedShowtime.showtime.price : TICKET_PRICE}
         onChangeShowtime={handleChangeShowtime}

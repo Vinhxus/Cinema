@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Badge from "./Badge";
+import { useBooking } from "../../context/useBooking";
 
 export type AgeRating = "P" | "C13" | "C16" | "C18";
 
@@ -27,11 +28,13 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ movie }: MovieCardProps) {
+  const {selectMovie} = useBooking()
   return (
     <Link
       to="/movie"
       title={`Xem chi tiết: ${movie.title}`}
       className="group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+      onClick={() => selectMovie(movie)}
     >
     <article className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md ">
       {/* Poster */}

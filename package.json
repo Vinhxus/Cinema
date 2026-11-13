@@ -1,0 +1,24 @@
+{
+  "name": "cinema",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n BE,FE -c blue,green \"npm run dev --prefix be\" \"npm run dev --prefix fe\"",
+    "install:all": "npm install && npm install --prefix fe && npm install --prefix be"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vinhxus/Cinema.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vinhxus/Cinema/issues"
+  },
+  "homepage": "https://github.com/Vinhxus/Cinema#readme",
+  "dependencies": {
+    "concurrently": "^10.0.7"
+  }
+}

@@ -1,5 +1,4 @@
-import duneArtwork from "../assets/dune.png";
-import type { AgeRating } from "../components/MovieComponents/MovieCard";
+import type { AgeRating, Movie } from "../components/MovieComponents/MovieCard";
 
 /* ---------- Types ---------- */
 export type Availability = "available" | "best" | "few";
@@ -72,7 +71,7 @@ export interface MovieTrailer {
 }
 
 export interface MovieDetailData {
-  id: string;
+  id: number; // trùng với Movie.id
   title: string;
   titlePrefix: string;
   titleAccent: string;
@@ -91,6 +90,7 @@ export interface MovieDetailData {
   backdrop: string;
   trailer: MovieTrailer;
   ageNotice: string;
+  cast: CastMember[];
 }
 
 /* ---------- Shared constants ---------- */
@@ -108,37 +108,6 @@ export function formatVnd(value: number): string {
 }
 
 /* ---------- Mock data ---------- */
-export const MOVIE_DETAIL: MovieDetailData = {
-  id: "dune-part-two",
-  title: "Dune: Part Two",
-  titlePrefix: "DUNE:",
-  titleAccent: "PART TWO",
-  subtitle: "Dune: Part Two (IMAX Laser)",
-  age: "C18",
-  genre: "Sci-Fi | Epic Action",
-  releaseDate: "Released March 2024",
-  imdbScore: 8.9,
-  duration: "166 min",
-  tagline: "Long live the fighters.",
-  synopsis:
-    "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe, he endeavors to prevent a terrible future only he can foresee.",
-  director: "Denis Villeneuve",
-  starring: "Timothée Chalamet, Zendaya, Rebecca Ferguson, Austin Butler",
-  formats: ["IMAX with Laser", "4DX", "Dolby Atmos 2D"],
-  poster: duneArtwork,
-  backdrop: duneArtwork,
-  trailer: {
-    label: "OFFICIAL TRAILER",
-    quality: "4K ULTRA HD",
-    duration: "02:34",
-    currentTime: "01:05",
-    totalTime: "02:14",
-    resolution: "1080p 60fps",
-  },
-  ageNotice:
-    "This film is rated for audiences aged 18 and above. Please present official government ID/Citizen ID upon ticket inspection.",
-};
-
 export const SHOW_DATES: ShowDate[] = [
   { id: "d-24", weekDay: "TODAY", fullName: "Thursday", day: "24", month: "OCT", slots: 124 },
   { id: "d-25", weekDay: "FRI", fullName: "Friday", day: "25", month: "OCT", slots: 25 },
@@ -284,3 +253,102 @@ export const CAST: CastMember[] = [
     accent: "from-sky-500 to-indigo-600",
   },
 ];
+
+/* ---------- Dựng MovieDetailData từ Movie trong BookingContext ---------- */
+type MovieExtras = Partial<
+  Pick<
+    MovieDetailData,
+    "releaseDate" | "duration" | "tagline" | "synopsis" | "director" | "starring" | "backdrop" | "trailer" | "cast"
+  >
+>;
+
+const DEFAULT_TRAILER: MovieTrailer = {
+  label: "OFFICIAL TRAILER",
+  quality: "HD",
+  duration: "02:00",
+  currentTime: "00:00",
+  totalTime: "02:00",
+  resolution: "1080p",
+};
+
+const DEFAULT_EXTRAS: Required<MovieExtras> = {
+  releaseDate: "Now showing",
+  duration: "",
+  tagline: "",
+  synopsis: "Synopsis is being updated.",
+  director: "",
+  starring: "",
+  backdrop: "",
+  trailer: DEFAULT_TRAILER,
+  cast: [],
+};
+
+/** Thông tin mở rộng theo Movie.id. Phim nào chưa có sẽ dùng DEFAULT_EXTRAS. */
+const MOVIE_EXTRAS: Record<number, MovieExtras> = {
+  1: {
+    releaseDate: "Released March 2024",
+    duration: "166 min",
+    tagline: "Long live the fighters.",
+    synopsis:
+      "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe, he endeavors to prevent a terrible future only he can foresee.",
+    director: "Denis Villeneuve",
+    starring: "Timothée Chalamet, Zendaya, Rebecca Ferguson, Austin Butler",
+    trailer: {
+      label: "OFFICIAL TRAILER",
+      quality: "4K ULTRA HD",
+      duration: "02:34",
+      currentTime: "01:05",
+      totalTime: "02:14",
+      resolution: "1080p 60fps",
+    },
+    cast: CAST,
+  },
+};
+
+const AGE_NOTICE: Record<AgeRating, string> = {
+  P: "This film is suitable for all audiences.",
+  C13: "This film is rated for audiences aged 13 and above. Please present valid ID upon ticket inspection.",
+  C16: "This film is rated for audiences aged 16 and above. Please present valid ID upon ticket inspection.",
+  C18: "This film is rated for audiences aged 18 and above. Please present official government ID/Citizen ID upon ticket inspection.",
+};
+
+/** Tách tiêu đề để MovieHero tô màu phần nhấn. */
+function splitTitle(title: string): { prefix: string; accent: string } {
+  const base = title.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  const colon = base.indexOf(":");
+  if (colon > 0) {
+    return { prefix: base.slice(0, colon + 1), accent: base.slice(colon + 1).trim() };
+  }
+  const words = base.split(/\s+/);
+  if (words.length === 1) return { prefix: base, accent: "" };
+  return { prefix: words.slice(0, -1).join(" "), accent: words[words.length - 1] };
+}
+
+export function getMovieDetail(movie: Movie): MovieDetailData {
+  const extras = { ...DEFAULT_EXTRAS, ...MOVIE_EXTRAS[movie.id] };
+  const { prefix, accent } = splitTitle(movie.title);
+  const formats = movie.formats.split("•").map((f) => f.trim()).filter(Boolean);
+
+  return {
+    id: movie.id,
+    title: movie.title,
+    titlePrefix: prefix,
+    titleAccent: accent,
+    subtitle: movie.subtitle,
+    age: movie.age,
+    genre: movie.genre,
+    releaseDate: extras.releaseDate,
+    imdbScore: movie.rating,
+    duration: extras.duration,
+    tagline: extras.tagline,
+    synopsis: extras.synopsis,
+    director: extras.director,
+    starring: extras.starring,
+    formats: formats.length > 0 ? formats : ["2D"],
+    poster: movie.poster,
+    backdrop: extras.backdrop || movie.poster,
+    trailer: extras.trailer,
+    ageNotice: AGE_NOTICE[movie.age],
+    cast: extras.cast,
+  };
+}

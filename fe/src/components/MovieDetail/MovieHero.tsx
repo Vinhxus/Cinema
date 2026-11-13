@@ -48,7 +48,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
 
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-linear-to-b from-slate-950/80 to-transparent p-3">
             <Badge className="bg-red-600 text-white">{AGE_LABEL[movie.age]}</Badge>
-            <Badge className="bg-white/15 text-white backdrop-blur">IMAX LASER</Badge>
+            <Badge className="bg-white/15 text-white backdrop-blur">{movie.formats[0]}</Badge>
           </div>
 
           <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-linear-to-t from-slate-950 via-slate-950/70 to-transparent px-3 pb-2.5 pt-8">
@@ -57,7 +57,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               Dolby Atmos
             </span>
             <span className="rounded border border-amber-400/50 bg-amber-500/15 px-1.5 py-0.5 font-['Space_Grotesk'] text-[9px] font-bold text-amber-300">
-              IMAX
+              {movie.duration || movie.formats[0]}
             </span>
           </div>
         </div>
@@ -74,21 +74,27 @@ export default function MovieHero({ movie }: MovieHeroProps) {
             {movie.titlePrefix} <span className="text-amber-400">{movie.titleAccent}</span>
           </h1>
 
-          <p className="font-['Outfit'] text-sm italic text-slate-300">&ldquo;{movie.tagline}&rdquo;</p>
+          {movie.tagline && (
+            <p className="font-['Outfit'] text-sm italic text-slate-300">&ldquo;{movie.tagline}&rdquo;</p>
+          )}
 
           <p className="max-w-xl font-['Outfit'] text-sm leading-relaxed text-slate-300">
             {movie.synopsis}
           </p>
 
           <dl className="flex flex-col gap-2 font-['Outfit'] text-xs">
-            <div className="flex items-start gap-3">
-              <dt className="w-16 shrink-0 text-slate-400">Director:</dt>
-              <dd className="text-slate-100">{movie.director}</dd>
-            </div>
-            <div className="flex items-start gap-3">
-              <dt className="w-16 shrink-0 text-slate-400">Starring:</dt>
-              <dd className="text-slate-100">{movie.starring}</dd>
-            </div>
+            {movie.director && (
+              <div className="flex items-start gap-3">
+                <dt className="w-16 shrink-0 text-slate-400">Director:</dt>
+                <dd className="text-slate-100">{movie.director}</dd>
+              </div>
+            )}
+            {movie.starring && (
+              <div className="flex items-start gap-3">
+                <dt className="w-16 shrink-0 text-slate-400">Starring:</dt>
+                <dd className="text-slate-100">{movie.starring}</dd>
+              </div>
+            )}
             <div className="flex items-start gap-3">
               <dt className="w-16 shrink-0 text-slate-400">Format:</dt>
               <dd className="flex flex-wrap items-center gap-1.5">

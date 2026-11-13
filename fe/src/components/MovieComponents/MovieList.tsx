@@ -10,6 +10,7 @@ import Conan from "../../assets/conan.jpg";
 import Furiosa from "../../assets/furiosa.jpg";
 import Deadpool from "../../assets/deadpool.jpg";
 import InsideOut2 from "../../assets/insideout2.jpg";
+
 /* ---------- Types ---------- */
 type TabKey = "now" | "upcoming";
 
