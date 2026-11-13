@@ -1,39 +1,68 @@
-import { SeatData } from './Grid'
+import type { SeatData } from './Grid'
+import type { AgeRating } from '../MovieComponents/MovieCard'
+import { useBooking } from '../../context/useBooking'
+import { AGE_LABEL } from '../../data/movieDetail'
 
 interface ContentProps {
   selectedSeats: SeatData[]
   totalPrice: number
 }
 
-const Content = ( {selectedSeats, totalPrice}: ContentProps ) => {
-    const seatText = selectedSeats.length
+const AGE_STYLE: Record<AgeRating, string> = {
+  P: 'bg-emerald-600',
+  C13: 'bg-amber-500',
+  C16: 'bg-orange-500',
+  C18: 'bg-red-600',
+}
+
+const lineClass =
+  "text-black text-base font-normal font-['Space_Grotesk'] leading-6"
+
+const Content = ({ selectedSeats, totalPrice }: ContentProps) => {
+  // Phim + suất chiếu lấy từ BookingContext (đã lưu từ MovieCard / MovieDetail)
+  const { movie, showtime } = useBooking()
+
+  const seatText = selectedSeats.length
     ? selectedSeats.map(s => s.label).join(', ')
     : '—'
+
   return (
-    <div className="w-215 inline-flex justify-between items-center">
-    <div className="w-34 inline-flex flex-col justify-start items-start">
-        <div className="self-stretch h-6 justify-center text-black text-xl font-bold font-['Space_Grotesk'] leading-6">DUNE: PART 2</div>
-        <div className="self-stretch h-5 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">2D</div>
-        <div className="w-9 h-4 px-2 py-0.5 bg-red-600 rounded shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] flex flex-col justify-start items-start">
-            <div className="self-stretch h-3 justify-center text-white text-[10px] font-bold font-['Space_Grotesk'] uppercase leading-4 tracking-wide">C18</div>
+    <div className="flex w-215 max-w-full items-center justify-between gap-6">
+      {/* Phim */}
+      <div className="flex w-48 shrink-0 flex-col items-start">
+        <div
+          title={movie?.title}
+          className="w-full truncate text-black text-xl font-bold font-['Space_Grotesk'] uppercase leading-6"
+        >
+          {movie?.title ?? '—'}
         </div>
+        <div className={`w-full truncate ${lineClass}`}>{movie?.formats ?? '—'}</div>
+        {movie && (
+          <div
+            className={`mt-0.5 rounded px-2 py-0.5 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] text-white text-[10px] font-bold font-['Space_Grotesk'] uppercase leading-4 tracking-wide ${AGE_STYLE[movie.age]}`}
+          >
+            {AGE_LABEL[movie.age]}
+          </div>
+        )}
+      </div>
+
+      {/* Suất chiếu + ghế + giá */}
+      <div className="flex min-w-0 flex-1 items-start gap-6">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className={lineClass}>Cinema: {showtime?.cinemaName ?? '—'}</div>
+          <div className={lineClass}>
+            Showtime: {showtime ? `${showtime.time}, ${showtime.date}` : '—'}
+          </div>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className={lineClass}>Room: {showtime?.hallName ?? '—'}</div>
+          <div className={`break-words ${lineClass}`}>Seat: {seatText}</div>
+          <div className={lineClass}>
+            Price: {totalPrice.toLocaleString('vi-VN')} vnđ
+          </div>
+        </div>
+      </div>
     </div>
-    <div className="w-181.25 flex justify-start items-start">
-        <div className="w-96 h-20 inline-flex flex-col justify-center items-start gap-1 overflow-hidden">
-            <div className="w-181.25 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Cinema: Hung Vuong plaza</div>
-            <div className="w-181.25 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Showtime: 16:10, 11/10/2026</div>
-        </div>
-        <div className="w-96 inline-flex flex-col justify-start items-start gap-1 overflow-hidden">
-            <div className="w-64 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">Room: Cinema 1</div>
-            <div className="w-56 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">
-                Seat: {seatText}
-            </div>            
-            <div className="w-72 h-7 justify-center text-black text-base font-normal font-['Space_Grotesk'] leading-6">
-                Price: {totalPrice.toLocaleString('vi-VN')} vnđ 
-            </div>
-        </div>
-    </div>
-</div>
   )
 }
 

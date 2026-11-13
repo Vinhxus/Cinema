@@ -10,6 +10,7 @@ import { seats } from "../data/seats"
 import { SubFooter } from "../components/seatComponents/SubFooter"
 import { useBooking } from "../context/useBooking"
 
+
 const SelectSeat = () => {
   const { selectedIds, selectedSeats, seatsTotal, toggleSeat } = useBooking()
   return (

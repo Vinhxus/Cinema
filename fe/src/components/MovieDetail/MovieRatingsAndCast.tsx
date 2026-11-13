@@ -9,6 +9,15 @@ interface MovieRatingsAndCastProps {
   cast: CastMember[];
 }
 
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
 export default function MovieRatingsAndCast({ movie, ratings, cast }: MovieRatingsAndCastProps) {
   return (
     <aside className="flex flex-col gap-4">
@@ -102,17 +111,19 @@ export default function MovieRatingsAndCast({ movie, ratings, cast }: MovieRatin
           ))}
         </ul>
 
-        <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-slate-700 to-slate-900 font-['Space_Grotesk'] text-[11px] font-bold text-white">
-            DV
-          </span>
-          <div className="min-w-0">
-            <p className="truncate font-['Outfit'] text-xs font-bold text-slate-900">
-              {movie.director}
-            </p>
-            <p className="truncate font-['Outfit'] text-[10px] text-slate-400">Director</p>
+        {movie.director && (
+          <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-slate-700 to-slate-900 font-['Space_Grotesk'] text-[11px] font-bold text-white">
+              {getInitials(movie.director)}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-['Outfit'] text-xs font-bold text-slate-900">
+                {movie.director}
+              </p>
+              <p className="truncate font-['Outfit'] text-[10px] text-slate-400">Director</p>
+            </div>
           </div>
-        </div>
+        )}
       </section>
     </aside>
   );

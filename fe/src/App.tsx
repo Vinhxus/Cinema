@@ -19,6 +19,7 @@ import TicketCheckIn from './pages/TicketCheckIn'
 
 import { BookingProvider } from './context/Booking'
 import MovieDetail from './pages/MovieDetail'  
+import Chat from './pages/Chat'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
       <Routes>
         {/* User Booking Flow */}
         <Route path="/" element={<Homepage />} />
+        <Route path="/chat" element={<Chat/>} />
         <Route path="/select-seat" element={<SelectSeat />} />
         <Route path="/food" element={<FoodPage />} />
         <Route path="/movie" element={<MovieDetail />} />        
