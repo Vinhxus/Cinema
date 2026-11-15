@@ -19,6 +19,11 @@
   },
   "homepage": "https://github.com/Vinhxus/Cinema#readme",
   "dependencies": {
-    "concurrently": "^10.0.7"
+    "concurrently": "^10.0.7",
+    "dotenv": "^18.0.10"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }

@@ -1,26 +1,18 @@
+
 import { z } from 'zod';
 
-// Regex kiểm tra số điện thoại di động Việt Nam (10 chữ số)
-const vietnamPhoneRegex = /(03|05|07|08|09)+([0-9]{8})\b/;
-
 export const checkoutSchema = z.object({
-    customerName: z
-        .string({ message: 'Vui lòng cung cấp họ tên' })
-        .trim()
-        .min(2, 'Họ tên phải có ít nhất 2 ký tự'),
+    customerName: z.string().min(2, 'Họ tên phải từ 2 ký tự trở lên'),
 
-    customerEmail: z
-        .string({ message: 'Vui lòng cung cấp email' })
-        .trim()
-        .email('Định dạng email không hợp lệ'),
+    customerEmail: z.string().email('Email không đúng định dạng'),
 
-    customerPhone: z
-        .string({ message: 'Vui lòng cung cấp số điện thoại' })
-        .trim()
-        .regex(vietnamPhoneRegex, 'Số điện thoại Việt Nam không hợp lệ (VD: 0912345678)'),
+    customerPhone: z.string().regex(
+        /^(?:\+?84|0)(?:3|5|7|8|9)\d{8}$/,
+        'Số điện thoại Việt Nam không hợp lệ'
+    ),
 
-    ageConfirmed: z.enum(['T13', 'T16', 'T18'], {
-        message: 'Vui lòng chọn xác nhận đúng mức độ tuổi (T13, T16, T18)',
+    ageConfirmed: z.enum(['P', 'T13', 'T16', 'T18'], {
+        error: 'Xác nhận độ tuổi không hợp lệ (P, T13, T16, T18)'
     }),
 });
 

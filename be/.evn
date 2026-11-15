@@ -1,0 +1,12 @@
+PORT=3000
+
+FRONTEND_URL=http://localhost:5173
+
+NODE_ENV=development
+
+# MySQL Database
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=MAT_KHAU_MYSQL_CUA_BAN
+DB_NAME=cinema_db

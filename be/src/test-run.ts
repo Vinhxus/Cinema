@@ -25,7 +25,7 @@ async function main() {
         endpoint: 'https://test-payment.momo.vn/v2/gateway/api/create',
     };
 
-    const momoService = new MomoService(momoTestConfig);
+    const momoService = new MomoService();
 
     const testPayment = {
         orderId: `MOMO_${Date.now()}`,
@@ -36,11 +36,16 @@ async function main() {
         extraData: '',
     };
 
-    const result = await momoService.createPaymentUrl(testPayment);
+    const result = await momoService.createPaymentUrl(
+        1,
+        50000,
+        `MOMO_${Date.now()}`
+    );
+
     console.log('Kết quả từ MoMo:\n', result);
 
-    if (result.resultCode === 0 && result.payUrl) {
-        console.log('\n🎉 THÀNH CÔNG! Link thanh toán của bạn:');
+    if (result.payUrl) {
+        console.log('\n🎉 TẠO URL THANH TOÁN THÀNH CÔNG!');
         console.log(result.payUrl);
     }
 }
