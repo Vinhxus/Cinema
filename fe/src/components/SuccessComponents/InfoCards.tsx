@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Share2, Printer, Clock, Accessibility, Headphones } from 'lucide-react';
 

@@ -279,7 +279,7 @@ export default function AdminDashboard({
   const navigate = useNavigate();
 
   const handleSelectNav = (id: AdminTabId) => {
-    const route = ADMIN_ROUTES[(typeof id !== 'undefined' ? (id as AdminTabId) : (tabId as AdminTabId))];
+    const route = ADMIN_ROUTES[id];
     if (route) navigate(route);
     if (onNavigate) {
       onNavigate(id);

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 export type SeatType = 'standard' | 'vip' | 'couple'
 export type SeatStatus = 'available' | 'selected' | 'unavailable'
