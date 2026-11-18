@@ -20,11 +20,13 @@ import TicketCheckIn from './pages/TicketCheckIn'
 import { BookingProvider } from './context/Booking'
 import MovieDetail from './pages/MovieDetail'  
 import Chat from './pages/Chat'
+import LabRoutes from './labs/LabRoutes' // Socket.IO lab pages (/lab, /lab/1 ... /lab/7)
 
 function App() {
   return (
     <BookingProvider>
       <Routes>
+        <Route path="/lab/*" element={<LabRoutes />} />
         {/* User Booking Flow */}
         <Route path="/" element={<Homepage />} />
         <Route path="/chat" element={<Chat/>} />

@@ -1,4 +1,4 @@
-import { SeatData } from '../components/seatComponents/Grid'
+import { type SeatData } from '../components/seatComponents/Grid'
 
 const normalRows = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 

@@ -16,7 +16,6 @@ import {
   Volume2,
   CheckCircle2,
   AlertTriangle,
-  type LucideIcon,
 } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
@@ -106,7 +105,7 @@ export default function TicketCheckIn({
   const navigate = useNavigate();
 
   const handleNavClick = (tabId: AdminTabId) => {
-    const route = ADMIN_ROUTES[(typeof id !== 'undefined' ? (id as AdminTabId) : (tabId as AdminTabId))];
+    const route = ADMIN_ROUTES[tabId];
     if (route) navigate(route);
     if (onNavigate) {
       onNavigate(tabId);

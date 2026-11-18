@@ -10,7 +10,6 @@ import {
   Settings,
   ChevronDown,
   Plus,
-  type LucideIcon,
 } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
@@ -34,7 +33,6 @@ const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
 
 const SEAT_ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const SEAT_COLS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-const COUPLE_SEATS = ['I01-02', 'I03-04', 'I05-06', 'I07-08'];
 
 function SidebarNavItem({
   item,
@@ -94,7 +92,7 @@ export default function SeatingAndPricing({
   const navigate = useNavigate();
 
   const handleNavClick = (tabId: AdminTabId) => {
-    const route = ADMIN_ROUTES[(typeof id !== 'undefined' ? (id as AdminTabId) : (tabId as AdminTabId))];
+    const route = ADMIN_ROUTES[tabId];
     if (route) navigate(route);
     if (onNavigate) {
       onNavigate(tabId);

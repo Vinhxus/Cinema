@@ -1,5 +1,8 @@
-import {createContext, useContext} from 'react'
-import { BookingContextValue } from './Booking'
+import { createContext, useContext } from 'react'
+// `import type` = chỉ lấy kiểu cho TypeScript, bị XÓA HẲN khi chạy trên trình duyệt.
+// tsconfig bật "verbatimModuleSyntax", nên nếu viết `import { BookingContextValue }`
+// thì trình duyệt sẽ đi tìm một export có tên đó trong Booking.tsx lúc runtime -> không có -> SyntaxError.
+import type { BookingContextValue } from './Booking'
 
 export const BookingContext = createContext<BookingContextValue | null>(null)
 
