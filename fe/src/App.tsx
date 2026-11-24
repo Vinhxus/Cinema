@@ -20,17 +20,20 @@ import TicketCheckIn from './pages/TicketCheckIn'
 import { BookingProvider } from './context/Booking'
 import MovieDetail from './pages/MovieDetail'  
 import Chat from './pages/Chat'
-import LabRoutes from './labs/LabRoutes' // Socket.IO lab pages (/lab, /lab/1 ... /lab/7)
+// Thư mục fe/src/labs không còn trong máy, import này làm Vite báo lỗi -> tạm tắt.
+// Nếu khôi phục lại labs thì bỏ comment 2 dòng (import + Route) là xong.
+// import LabRoutes from './labs/LabRoutes'
 
 function App() {
   return (
     <BookingProvider>
       <Routes>
-        <Route path="/lab/*" element={<LabRoutes />} />
+        {/* <Route path="/lab/*" element={<LabRoutes />} /> */}
         {/* User Booking Flow */}
         <Route path="/" element={<Homepage />} />
         <Route path="/chat" element={<Chat/>} />
         <Route path="/select-seat" element={<SelectSeat />} />
+        <Route path="/booking/:showtimeId" element={<SelectSeat />} />
         <Route path="/food" element={<FoodPage />} />
         <Route path="/movie" element={<MovieDetail />} />        
 

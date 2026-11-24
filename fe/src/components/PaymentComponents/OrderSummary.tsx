@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Armchair, Popcorn, Lock, ShieldAlert, PhoneCall } from 'lucide-react';
 import { useBooking } from '../../context/useBooking';
 import type { SeatType } from '../seatComponents/Seat';
-import { Price } from '../../data/Price';
+import { useCountdown } from '../../hooks/useCountdown';
 import { vnd } from '../../utils/currency';
 import dune from '../../assets/dune.png';
 
@@ -15,24 +15,15 @@ const SEAT_LABEL: Record<SeatType, string> = {
 
 export const OrderSummary: React.FC = () => {
     const navigate = useNavigate();
-    const { movie, showtime, selectedSeats, foodItems, customer, voucher, totals } = useBooking();
+    const { movie, showtime, selectedSeats, foodItems, customer, voucher, totals, holdExpiresAt, clockOffset } = useBooking();
 
-    // 1. Logic đếm ngược 10 phút (600 giây)
-    const [secondsLeft, setSecondsLeft] = useState<number>(600);
+    // 1. Đếm ngược tới hạn giữ ghế do SERVER đặt (FR-BK-10/11), không tự đếm lại 10 phút
+    const secondsLeft = useCountdown(holdExpiresAt, clockOffset) ?? 0;
 
     useEffect(() => {
-        if (secondsLeft <= 0) {
-            // Hết thời gian giữ ghế tự động chuyển sang trang Failure
-            navigate('/failure');
-            return;
-        }
-
-        const timer = setInterval(() => {
-            setSecondsLeft((prev) => prev - 1);
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [secondsLeft, navigate]);
+        // Hết thời gian giữ ghế tự động chuyển sang trang Failure
+        if (holdExpiresAt != null && secondsLeft <= 0) navigate('/failure');
+    }, [holdExpiresAt, secondsLeft, navigate]);
 
     const minutes = Math.floor(secondsLeft / 60);
     const seconds = secondsLeft % 60;
@@ -43,9 +34,12 @@ export const OrderSummary: React.FC = () => {
 
     // Gom ghế theo loại: [{ type: 'vip', labels: ['C08','C09'] }, ...]
     const seatGroups = useMemo(() => {
-        const map = new Map<SeatType, string[]>();
-        selectedSeats.forEach((s) => map.set(s.type, [...(map.get(s.type) ?? []), s.label]));
-        return Array.from(map, ([type, labels]) => ({ type, labels }));
+        const map = new Map<SeatType, { labels: string[]; total: number }>();
+        selectedSeats.forEach((s) => {
+            const g = map.get(s.type) ?? { labels: [], total: 0 };
+            map.set(s.type, { labels: [...g.labels, s.label], total: g.total + s.price });
+        });
+        return Array.from(map, ([type, g]) => ({ type, ...g }));
     }, [selectedSeats]);
 
     // Chỉ cho bấm thanh toán khi form đã điền đủ
@@ -158,7 +152,7 @@ export const OrderSummary: React.FC = () => {
                                 </div>
                             </div>
                             <span className="pay-text-primary font-bold font-mono text-xs whitespace-nowrap">
-                                {vnd(Price[g.type] * g.labels.length)}
+                                {vnd(g.total)}
                             </span>
                         </div>
                     ))}

@@ -1,27 +1,33 @@
 import type { SeatData } from './Grid'
-import type { AgeRating } from '../MovieComponents/MovieCard'
-import { useBooking } from '../../context/useBooking'
-import { AGE_LABEL } from '../../data/movieDetail'
+import { formatMmSs } from '../../hooks/useCountdown'
 
-interface ContentProps {
-  selectedSeats: SeatData[]
-  totalPrice: number
+export interface ShowtimeSummary {
+  title: string
+  format: string
+  ageRating: string // 'P' | 'T13' | 'T16' | 'T18' (theo DB)
+  cinemaName: string
+  roomName: string
+  showtimeLabel: string // "20:15, Thứ Ba 24/11"
 }
 
-const AGE_STYLE: Record<AgeRating, string> = {
+interface ContentProps {
+  info: ShowtimeSummary | null
+  selectedSeats: SeatData[]
+  totalPrice: number
+  secondsLeft: number | null // null = chưa giữ ghế nào
+}
+
+const AGE_STYLE: Record<string, string> = {
   P: 'bg-emerald-600',
-  C13: 'bg-amber-500',
-  C16: 'bg-orange-500',
-  C18: 'bg-red-600',
+  T13: 'bg-amber-500',
+  T16: 'bg-orange-500',
+  T18: 'bg-red-600',
 }
 
 const lineClass =
   "text-black text-base font-normal font-['Space_Grotesk'] leading-6"
 
-const Content = ({ selectedSeats, totalPrice }: ContentProps) => {
-  // Phim + suất chiếu lấy từ BookingContext (đã lưu từ MovieCard / MovieDetail)
-  const { movie, showtime } = useBooking()
-
+const Content = ({ info, selectedSeats, totalPrice, secondsLeft }: ContentProps) => {
   const seatText = selectedSeats.length
     ? selectedSeats.map(s => s.label).join(', ')
     : '—'
@@ -31,17 +37,17 @@ const Content = ({ selectedSeats, totalPrice }: ContentProps) => {
       {/* Phim */}
       <div className="flex w-48 shrink-0 flex-col items-start">
         <div
-          title={movie?.title}
+          title={info?.title}
           className="w-full truncate text-black text-xl font-bold font-['Space_Grotesk'] uppercase leading-6"
         >
-          {movie?.title ?? '—'}
+          {info?.title ?? '—'}
         </div>
-        <div className={`w-full truncate ${lineClass}`}>{movie?.formats ?? '—'}</div>
-        {movie && (
+        <div className={`w-full truncate ${lineClass}`}>{info?.format ?? '—'}</div>
+        {info && (
           <div
-            className={`mt-0.5 rounded px-2 py-0.5 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] text-white text-[10px] font-bold font-['Space_Grotesk'] uppercase leading-4 tracking-wide ${AGE_STYLE[movie.age]}`}
+            className={`mt-0.5 rounded px-2 py-0.5 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] text-white text-[10px] font-bold font-['Space_Grotesk'] uppercase leading-4 tracking-wide ${AGE_STYLE[info.ageRating] ?? 'bg-slate-500'}`}
           >
-            {AGE_LABEL[movie.age]}
+            {info.ageRating}
           </div>
         )}
       </div>
@@ -49,13 +55,20 @@ const Content = ({ selectedSeats, totalPrice }: ContentProps) => {
       {/* Suất chiếu + ghế + giá */}
       <div className="flex min-w-0 flex-1 items-start gap-6">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className={lineClass}>Cinema: {showtime?.cinemaName ?? '—'}</div>
-          <div className={lineClass}>
-            Showtime: {showtime ? `${showtime.time}, ${showtime.date}` : '—'}
-          </div>
+          <div className={lineClass}>Cinema: {info?.cinemaName ?? '—'}</div>
+          <div className={lineClass}>Showtime: {info?.showtimeLabel ?? '—'}</div>
+          {secondsLeft != null && (
+            <div
+              className={`font-['Space_Grotesk'] text-base font-bold leading-6 ${
+                secondsLeft < 60 ? 'text-red-600' : 'text-amber-600'
+              }`}
+            >
+              Holding seats: {formatMmSs(secondsLeft)}
+            </div>
+          )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className={lineClass}>Room: {showtime?.hallName ?? '—'}</div>
+          <div className={lineClass}>Room: {info?.roomName ?? '—'}</div>
           <div className={`break-words ${lineClass}`}>Seat: {seatText}</div>
           <div className={lineClass}>
             Price: {totalPrice.toLocaleString('vi-VN')} vnđ

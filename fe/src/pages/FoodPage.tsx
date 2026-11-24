@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Header from "../components/common/Header";
 import {
   ArrowRight, Armchair, Check, CheckCircle2, Clock, ConciergeBell, CupSoda,
@@ -8,7 +8,7 @@ import {
 import { useBooking } from "../context/useBooking";
 // SeatType chỉ là kiểu -> phải dùng `import type` (cùng loại lỗi với BookingContextValue)
 import type { SeatType } from "../components/seatComponents/Seat";
-import { Price } from "../data/Price";
+import { useCountdown } from "../hooks/useCountdown";
 import { COMBOS, type Category, type Combo } from "../data/combos";
 import { vnd } from "../utils/currency";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -30,7 +30,6 @@ const STEPS = [
   { label: "Step5", title: "Detail" },
 ];
 
-const HOLD_SECONDS = 4 * 60 + 54;
 
 /* ------------------------------ Steps ------------------------------ */
 function Stepper() {
@@ -150,21 +149,22 @@ function ComboCard({ combo, qty, onChange }: { combo: Combo; qty: number; onChan
 /* ------------------------------ Page ------------------------------ */
 export default function FoodPage() {
   // Giỏ bắp nước giờ nằm trong context -> sang trang Payment vẫn còn
-  const { movie, showtime, selectedSeats, foodQty, foodItems, setFoodQty, clearFood, totals } = useBooking();
+  const { movie, showtime, selectedSeats, foodQty, foodItems, setFoodQty, clearFood, totals, holdExpiresAt, clockOffset } = useBooking();
   const [category, setCategory] = useState<"all" | Category>("all");
-  const [seconds, setSeconds] = useState(HOLD_SECONDS);
+  // Đồng hồ giữ ghế lấy từ hạn do SERVER đặt -> chuyển trang/reload không bị đếm lại từ đầu
+  const seconds = useCountdown(holdExpiresAt, clockOffset) ?? 0;
   const navigate = useNavigate();
-  useEffect(() => {
-    const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   const visible = category === "all" ? COMBOS : COMBOS.filter((c) => c.category === category);
   // Gom ghế theo loại để hiển thị: "G11, G12 (standard)  110.000 × 2"
   const seatGroups = useMemo(() => {
-    const map = new Map<SeatType, string[]>();
-    selectedSeats.forEach((s) => map.set(s.type, [...(map.get(s.type) ?? []), s.label]));
-    return Array.from(map, ([type, labels]) => ({ type, labels }));
+    // Giá mỗi ghế do server tính theo suất chiếu, nên cộng giá thật thay vì tra bảng giá cố định
+    const map = new Map<SeatType, { labels: string[]; total: number }>();
+    selectedSeats.forEach((s) => {
+      const g = map.get(s.type) ?? { labels: [], total: 0 };
+      map.set(s.type, { labels: [...g.labels, s.label], total: g.total + s.price });
+    });
+    return Array.from(map, ([type, g]) => ({ type, ...g }));
   }, [selectedSeats]);
 
   const itemCount = foodItems.reduce((n, line) => n + line.qty, 0);
@@ -300,7 +300,7 @@ export default function FoodPage() {
                       {g.labels.join(", ")} ({g.type})
                     </span>
                     <span>
-                      {vnd(Price[g.type])} × {g.labels.length}
+                      {vnd(Math.round(g.total / g.labels.length))} × {g.labels.length}
                     </span>
                   </div>
                 ))}

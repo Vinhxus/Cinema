@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { seats } from '../data/seats'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { SeatData } from '../components/seatComponents/Grid'
 import type { Movie } from '../components/MovieComponents/MovieCard'
-import { Price } from '../data/Price'
+import { Socket } from '../Socket'
 import { COMBOS, VIP_DISCOUNT_RATE, VOUCHERS, VAT_RATE, type Combo } from '../data/combos'
 import { BookingContext } from './useBooking'
 
@@ -47,11 +46,13 @@ export interface BookingContextValue {
   showtime: ShowtimeInfo | null
   selectMovie: (movie: Movie) => void
   selectShowtime: (showtime: ShowtimeInfo) => void
-  // ghế
+  // ghế: BẢN SAO những gì server xác nhận đang giữ (nguồn sự thật nằm ở server)
   selectedIds: string[]
   selectedSeats: SeatData[]
   seatsTotal: number
-  toggleSeat: (id: string) => void
+  holdExpiresAt: number | null // epoch ms theo đồng hồ server
+  clockOffset: number // serverNow - Date.now()
+  syncHeldSeats: (seats: SeatData[], expiresAt: number | null, clockOffset: number) => void
   clearSeats: () => void
   // bắp nước
   foodQty: Record<string, number>
@@ -75,7 +76,9 @@ const EMPTY_CUSTOMER: CustomerInfo = { fullName: '', phone: '', email: '' }
 export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const [movie, setMovie] = useState<Movie | null>(null)
   const [showtime, setShowtime] = useState<ShowtimeInfo | null>(null)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [selectedSeats, setSelectedSeats] = useState<SeatData[]>([])
+  const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null)
+  const [clockOffset, setClockOffset] = useState(0)
   const [foodQty, setFoodQtyState] = useState<Record<string, number>>({})
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY_CUSTOMER)
   const [voucher, setVoucher] = useState<string | null>(null)
@@ -86,26 +89,62 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       // đổi sang phim khác thì suất chiếu và ghế cũ không còn hợp lệ
       if (m.id !== movie?.id) {
         setShowtime(null)
-        setSelectedIds([])
+        setSelectedSeats([])
+        setHoldExpiresAt(null)
       }
       setMovie(m)
     },
     [movie?.id]
   )
 
-  const selectShowtime = useCallback((s: ShowtimeInfo) => {
-    setShowtime(s)
-    setSelectedIds([]) // đổi suất thì sơ đồ ghế khác nên reset
-  }, [])
+  const selectShowtime = useCallback(
+    (s: ShowtimeInfo) => {
+      // đổi sang suất KHÁC thì ghế cũ không thuộc sơ đồ này nữa
+      // (ghế vẫn được server giữ tới hết hạn, quay lại suất cũ sẽ thấy lại)
+      if (s.id !== showtime?.id) {
+        setSelectedSeats([])
+        setHoldExpiresAt(null)
+      }
+      setShowtime(s)
+    },
+    [showtime?.id]
+  )
 
   /* ---------------- ghế ---------------- */
-  const toggleSeat = useCallback((id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    )
+  // Trang chọn ghế gọi hàm này mỗi khi server trả về danh sách ghế đang giữ
+  const syncHeldSeats = useCallback(
+    (seats: SeatData[], expiresAt: number | null, offset: number) => {
+      setSelectedSeats(seats)
+      setHoldExpiresAt(seats.length ? expiresAt : null)
+      setClockOffset(offset)
+    },
+    []
+  )
+
+  const clearSeats = useCallback(() => {
+    setSelectedSeats([])
+    setHoldExpiresAt(null)
   }, [])
 
-  const clearSeats = useCallback(() => setSelectedIds([]), [])
+  // Hết giờ giữ ghế có thể xảy ra khi người dùng đang ở trang Food/Payment
+  // -> nghe ở Provider (luôn mounted) thay vì ở trang chọn ghế.
+  const showtimeIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    showtimeIdRef.current = showtime?.id
+  }, [showtime?.id])
+
+  useEffect(() => {
+    const onExpired = ({ showtimeId }: { showtimeId: string }) => {
+      if (showtimeId !== showtimeIdRef.current) return
+      setSelectedSeats([])
+      setHoldExpiresAt(null)
+      window.alert('Your seat hold has expired. Please select your seats again.')
+    }
+    Socket.on('hold-expired', onExpired)
+    return () => {
+      Socket.off('hold-expired', onExpired)
+    }
+  }, [])
 
   /* ---------------- bắp nước ---------------- */
   const setFoodQty = useCallback((comboId: string, qty: number) => {
@@ -136,20 +175,19 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const reset = useCallback(() => {
     setMovie(null)
     setShowtime(null)
-    setSelectedIds([])
+    setSelectedSeats([])
+    setHoldExpiresAt(null)
     setFoodQtyState({})
     setCustomer(EMPTY_CUSTOMER)
     setVoucher(null)
   }, [])
 
   /* ---------------- dữ liệu suy ra (derived state) ---------------- */
-  const selectedSeats = useMemo(
-    () => seats.filter(seat => selectedIds.includes(seat.id)),
-    [selectedIds]
-  )
+  const selectedIds = useMemo(() => selectedSeats.map(seat => seat.id), [selectedSeats])
 
+  // Giá từng ghế do server tính (giá suất + phụ thu loại ghế), client chỉ cộng lại để hiển thị
   const seatsTotal = useMemo(
-    () => selectedSeats.reduce((sum, seat) => sum + Price[seat.type], 0),
+    () => selectedSeats.reduce((sum, seat) => sum + seat.price, 0),
     [selectedSeats]
   )
 
@@ -186,13 +224,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo<BookingContextValue>(
     () => ({
       movie, showtime, selectMovie, selectShowtime,
-      selectedIds, selectedSeats, seatsTotal, toggleSeat, clearSeats,
+      selectedIds, selectedSeats, seatsTotal, holdExpiresAt, clockOffset, syncHeldSeats, clearSeats,
       foodQty, foodItems, setFoodQty, clearFood,
       customer, updateCustomer, voucher, applyVoucher, removeVoucher,
       totals, reset,
     }),
     [movie, showtime, selectMovie, selectShowtime,
-     selectedIds, selectedSeats, seatsTotal, toggleSeat, clearSeats,
+     selectedIds, selectedSeats, seatsTotal, holdExpiresAt, clockOffset, syncHeldSeats, clearSeats,
      foodQty, foodItems, setFoodQty, clearFood,
      customer, updateCustomer, voucher, applyVoucher, removeVoucher,
      totals, reset]

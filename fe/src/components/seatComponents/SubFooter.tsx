@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { Heart, Check, X } from 'lucide-react'
+import { Heart, Check, X, Clock } from 'lucide-react'
 import { Seat, type SeatType, type SeatStatus } from './Seat'
+import { vnd } from '../../utils/currency'
 
 interface LegendItemProps {
   title: string
@@ -40,44 +41,29 @@ const LegendItem = ({
   </div>
 )
 
-export const SubFooter = () => (
+interface SubFooterProps {
+  /** Giá theo loại ghế của suất đang xem (lấy từ server). Thiếu loại nào thì ẩn loại đó. */
+  prices?: Partial<Record<SeatType, number>>
+}
+
+export const SubFooter = ({ prices = {} }: SubFooterProps) => (
   <div className="flex w-full flex-wrap items-center justify-center gap-x-10 gap-y-4 rounded-xl bg-white px-8 py-4 shadow-sm">
-    <LegendItem
-      title="Standard"
-      desc="110,000 VND"
-      seatLabel="A01"
-      type="standard"
-    />
+    {prices.standard != null && (
+      <LegendItem title="Standard" desc={vnd(prices.standard)} seatLabel="A01" type="standard" />
+    )}
+    {prices.vip != null && <LegendItem title="Vip" desc={vnd(prices.vip)} seatLabel="A01" type="vip" />}
+    {prices.couple != null && (
+      <LegendItem
+        icon={<Heart size={14} />}
+        title="Sweetbox"
+        desc={`${vnd(prices.couple)} / pair`}
+        seatLabel="H01"
+        type="couple"
+      />
+    )}
 
-    <LegendItem
-      title="Vip"
-      desc="130,000 VND"
-      seatLabel="A01"
-      type="vip"
-    />
-
-    <LegendItem
-      icon={<Heart size={14} />}
-      title="Sweetbox"
-      desc="280,000 VND / pair"
-      seatLabel="J01"
-      type="couple"
-    />
-
-    <LegendItem
-      icon={<Check size={14} />}
-      title="Selected"
-      desc="Your selection"
-      seatLabel="A01"
-      status="selected"
-    />
-
-    <LegendItem
-      icon={<X size={14} />}
-      title="Sold / Reserved"
-      desc="Unavailable"
-      seatLabel="A01"
-      status="unavailable"
-    />
+    <LegendItem icon={<Check size={14} />} title="Selected" desc="Your selection" seatLabel="A01" status="selected" />
+    <LegendItem icon={<Clock size={14} />} title="Held" desc="Someone is holding" seatLabel="A01" status="held" />
+    <LegendItem icon={<X size={14} />} title="Sold" desc="Unavailable" seatLabel="A01" status="unavailable" />
   </div>
 )
