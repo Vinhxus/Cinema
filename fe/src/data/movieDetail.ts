@@ -4,6 +4,8 @@ import type { AgeRating, Movie } from "../components/MovieComponents/MovieCard";
 export type Availability = "available" | "best" | "few" | "sold_out";
 
 export interface Showtime {
+  /** ShowtimeID thật trong DB — dùng khi gọi API giữ ghế / thanh toán. */
+  showtimeId?: number;
   id: string;
   startTime: string;
   endTime: string;
@@ -12,6 +14,10 @@ export interface Showtime {
   seatsLeft: string;
   availability: Availability;
   price: number;
+  /** Suất đã qua giờ chiếu hoặc nằm trong cửa sổ cấm bán vé (15 phút sát giờ). */
+  isClosed?: boolean;
+  /** Phòng đã hết ghế trống. */
+  isSoldOut?: boolean;
 }
 
 export interface CinemaHall {
@@ -64,6 +70,8 @@ export interface MovieRatings {
 export interface MovieTrailer {
   label: string;
   quality: string;
+  /** Link trailer gốc (YouTube /embed/... hoặc MP4). Rỗng nếu chưa có. */
+  url?: string;
   duration: string;
   currentTime: string;
   totalTime: string;
@@ -80,6 +88,7 @@ export interface MovieDetailData {
   genre: string;
   releaseDate: string;
   imdbScore: number;
+  audienceScore: number;
   duration: string;
   tagline: string;
   synopsis: string;
@@ -305,7 +314,7 @@ const MOVIE_EXTRAS: Record<number, MovieExtras> = {
   },
 };
 
-const AGE_NOTICE: Record<AgeRating, string> = {
+export const AGE_NOTICE: Record<AgeRating, string> = {
   P: "This film is suitable for all audiences.",
   C13: "This film is rated for audiences aged 13 and above. Please present valid ID upon ticket inspection.",
   C16: "This film is rated for audiences aged 16 and above. Please present valid ID upon ticket inspection.",
@@ -313,7 +322,7 @@ const AGE_NOTICE: Record<AgeRating, string> = {
 };
 
 /** Tách tiêu đề để MovieHero tô màu phần nhấn. */
-function splitTitle(title: string): { prefix: string; accent: string } {
+export function splitTitle(title: string): { prefix: string; accent: string } {
   const base = title.replace(/\s*\([^)]*\)\s*/g, " ").trim();
   const colon = base.indexOf(":");
   if (colon > 0) {
@@ -339,6 +348,7 @@ export function getMovieDetail(movie: Movie): MovieDetailData {
     genre: movie.genre,
     releaseDate: extras.releaseDate,
     imdbScore: movie.rating,
+    audienceScore: movie.rating,
     duration: extras.duration,
     tagline: extras.tagline,
     synopsis: extras.synopsis,

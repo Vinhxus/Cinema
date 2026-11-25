@@ -129,7 +129,8 @@ const Subhead = () => {
     }
 
     const query = params.toString();
-    navigate(query ? `/movie?${query}` : "/movie");
+    const detailPath = `/movie/${selectedMovieId}`;
+    navigate(query ? `${detailPath}?${query}` : detailPath);
   };
 
   return (

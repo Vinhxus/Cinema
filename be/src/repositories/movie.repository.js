@@ -108,3 +108,16 @@ export async function searchMovies(keyword, limit = 8) {
 
   return rows;
 }
+
+/** Chi tiết 1 phim theo MovieID (trả null nếu không tồn tại). */
+export async function findMovieById(movieId) {
+  const [rows] = await pool.query(
+    `SELECT ${MOVIE_COLUMNS}
+     FROM movies
+     WHERE MovieID = ?
+     LIMIT 1`,
+    [movieId]
+  );
+
+  return rows[0] ?? null;
+}

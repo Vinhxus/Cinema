@@ -31,7 +31,7 @@ export function MovieCard({ movie }: MovieCardProps) {
   const {selectMovie} = useBooking()
   return (
     <Link
-      to="/movie"
+      to={`/movie/${movie.id}`}
       title={`Xem chi tiết: ${movie.title}`}
       className="group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
       onClick={() => selectMovie(movie)}

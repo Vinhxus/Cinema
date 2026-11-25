@@ -2,13 +2,13 @@ import { useState } from "react";
 import {
   Bookmark,
   Maximize,
-  Pause,
   Play,
   RotateCcw,
   Share2,
   SkipBack,
   SkipForward,
   Volume2,
+  X,
 } from "lucide-react";
 import Badge from "../MovieComponents/Badge";
 import type { MovieDetailData } from "../../data/movieDetail";
@@ -24,9 +24,49 @@ function formatChipClassName(format: string): string {
   return "border-white/20 bg-white/10 text-slate-200";
 }
 
+/**
+ * BE lưu TrailerUrl dạng https://www.youtube.com/embed/<id> (cũng có thể là link watch/youtu.be).
+ * Chuẩn hoá về dạng embed để nhúng iframe; trả null nếu không phải YouTube.
+ */
+function toYouTubeEmbedUrl(rawUrl: string): string | null {
+  if (!rawUrl) return null;
+
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.replace(/^www\./, "");
+
+    if (host === "youtu.be") {
+      const shortId = url.pathname.slice(1);
+      return shortId ? `https://www.youtube-nocookie.com/embed/${shortId}?autoplay=1&rel=0` : null;
+    }
+
+    if (host === "youtube.com" || host === "youtube-nocookie.com" || host === "m.youtube.com") {
+      const embedMatch = url.pathname.match(/\/embed\/([^/]+)/);
+      const videoId = embedMatch ? embedMatch[1] : url.searchParams.get("v");
+      return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0` : null;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function MovieHero({ movie }: MovieHeroProps) {
   const [wishlisted, setWishlisted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const trailerUrl = (movie.trailer.url ?? "").trim();
+  const embedUrl = toYouTubeEmbedUrl(trailerUrl);
+
+  const handlePlayTrailer = () => {
+    if (embedUrl) {
+      setIsPlaying(true);
+      return;
+    }
+    // Link không phải YouTube (mp4/khác) thì mở tab mới
+    if (trailerUrl) window.open(trailerUrl, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <section className="relative w-full overflow-hidden bg-slate-950">
@@ -144,35 +184,55 @@ export default function MovieHero({ movie }: MovieHeroProps) {
             />
             <div className="absolute inset-0 bg-slate-950/45" />
 
+            {/* Trailer thật: chỉ mount iframe khi bấm Play để không tải video trước */}
+            {isPlaying && embedUrl && (
+              <div className="absolute inset-0 z-20 bg-black">
+                <iframe
+                  src={embedUrl}
+                  title={`${movie.title} trailer`}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsPlaying(false)}
+                  aria-label="Đóng trailer"
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-slate-950/80 text-white transition hover:bg-slate-950"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
             <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
               <Badge className="bg-red-600 text-white">{movie.trailer.label}</Badge>
               <Badge className="bg-black/60 text-slate-200 backdrop-blur">
-                {movie.trailer.quality} • {movie.trailer.duration}
+                {[movie.trailer.quality, movie.trailer.duration].filter(Boolean).join(" • ") || "HD"}
               </Badge>
             </div>
 
             <button
               type="button"
-              onClick={() => setIsPlaying((current) => !current)}
-              aria-label={isPlaying ? "Pause trailer" : "Play trailer"}
-              className="absolute inset-0 m-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 transition hover:bg-amber-400"
+              onClick={handlePlayTrailer}
+              disabled={!trailerUrl}
+              aria-label={trailerUrl ? "Play trailer" : "Trailer chưa cập nhật"}
+              title={trailerUrl ? "Play trailer" : "Trailer chưa cập nhật"}
+              className="absolute inset-0 m-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {isPlaying ? (
-                <Pause className="h-6 w-6 fill-slate-950" />
-              ) : (
-                <Play className="ml-0.5 h-6 w-6 fill-slate-950" />
-              )}
+              <Play className="ml-0.5 h-6 w-6 fill-slate-950" />
             </button>
 
             <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 bg-linear-to-t from-slate-950 via-slate-950/70 to-transparent px-3 pb-2.5 pt-8">
               <div className="relative h-1 w-full rounded-full bg-white/30">
                 <span
                   className="absolute inset-y-0 left-0 rounded-full bg-amber-400"
-                  style={{ width: isPlaying ? "62%" : "48%" }}
+                  style={{ width: "48%" }}
                 />
                 <span
                   className="absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-amber-400"
-                  style={{ left: isPlaying ? "62%" : "48%" }}
+                  style={{ left: "48%" }}
                 />
               </div>
 
@@ -188,7 +248,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
                     <SkipForward className="h-3.5 w-3.5" />
                   </button>
                   <span className="font-['Space_Grotesk'] text-[10px] text-slate-300">
-                    {movie.trailer.currentTime} / {movie.trailer.totalTime}
+                    {trailerUrl ? "Official trailer" : "Trailer chưa cập nhật"}
                   </span>
                 </div>
 

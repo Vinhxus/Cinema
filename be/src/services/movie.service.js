@@ -1,7 +1,9 @@
 import * as movieRepository from '../repositories/movie.repository.js';
 import { getOrSet } from '../utils/cache.js';
+import AppError from '../utils/AppError.js';
 
 const LIST_TTL_MS = 30_000; // danh sách phim: 30 giây
+const DETAIL_TTL_MS = 15_000; // chi tiết 1 phim: 15 giây
 const STATS_TTL_MS = 60_000; // số lượng + thể loại: 60 giây
 
 const STATUS_FILTER = {
@@ -60,4 +62,20 @@ export async function searchMovies(keyword) {
 
   const items = await movieRepository.searchMovies(normalizedKeyword, 8);
   return { items, total: items.length, query: normalizedKeyword };
+}
+
+/**
+ * Chi tiết 1 phim theo MovieID (trang MovieDetail).
+ * Không tìm thấy => AppError 404 để error middleware trả JSON thống nhất.
+ */
+export async function getMovieById(movieId) {
+  const movie = await getOrSet(`movies:detail:${movieId}`, DETAIL_TTL_MS, () =>
+    movieRepository.findMovieById(movieId)
+  );
+
+  if (!movie) {
+    throw new AppError(`Không tìm thấy phim có MovieID = ${movieId}.`, 404);
+  }
+
+  return movie;
 }

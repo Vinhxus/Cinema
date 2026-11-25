@@ -1,5 +1,13 @@
 import type { AgeRating, Movie } from "../components/MovieComponents/MovieCard";
-import type { Availability } from "../data/movieDetail";
+import {
+  AGE_NOTICE,
+  splitTitle,
+  type Availability,
+  type CastMember,
+  type Cinema,
+  type MovieDetailData,
+  type ShowDate,
+} from "../data/movieDetail";
 
 /** URL gốc của Backend Express (có thể override bằng VITE_API_BASE_URL). */
 const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000").replace(/\/+$/, "");
@@ -413,4 +421,178 @@ export async function fetchMovieShowtimes({
 
   const data = await request<MovieShowtimesResult>(`/api/showtimes?${query.toString()}`);
   return mapShowtimes(data);
+}
+
+/* ---------------------- Trang chi tiết phim (GET /api/movies/:id) ---------------------- */
+
+/** Màu avatar xoay vòng cho dàn diễn viên dựng từ cột Starring. */
+const CAST_ACCENTS = [
+  "from-teal-500 to-slate-700",
+  "from-amber-400 to-orange-600",
+  "from-rose-500 to-red-700",
+  "from-sky-500 to-indigo-600",
+  "from-emerald-500 to-teal-700",
+  "from-fuchsia-500 to-purple-700",
+];
+
+function toInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+}
+
+/** DB chỉ có 1 chuỗi Starring => tách thành danh sách cast cho khối Ratings & Cast. */
+function buildCast(starring: string): CastMember[] {
+  return starring
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .slice(0, 6)
+    .map((name, index) => ({
+      id: `cast-${index + 1}`,
+      name,
+      role: "Cast",
+      initials: toInitials(name),
+      accent: CAST_ACCENTS[index % CAST_ACCENTS.length] ?? CAST_ACCENTS[0],
+    }));
+}
+
+/** "2024-03-01" -> "Released 01/03/2024" (đúng layout của MovieHero). */
+function formatReleaseDate(iso: string | null | undefined): string {
+  const [year, month, day] = (iso ?? "").split("-");
+  if (!year || !month || !day) return "";
+  return `Released ${day}/${month}/${year}`;
+}
+
+/** 1 dòng MySQL -> MovieDetailData mà MovieHero / MovieRatingsAndCast đang dùng. */
+export function mapMovieDetail(row: RawMovie): MovieDetailData {
+  const age = mapAgeRating(row.AgeRating);
+  const { prefix, accent } = splitTitle(row.Title ?? "");
+  const formats = (row.Formats ?? "")
+    .split("•")
+    .map((token) => token.trim())
+    .filter(Boolean);
+  const poster = row.PosterUrl ?? "";
+  const imdbScore = toNumber(row.ImdbScore);
+  const audienceScore = toNumber(row.AudienceScore) || imdbScore;
+  const tagline = row.Tagline ?? "";
+
+  return {
+    id: toNumber(row.MovieID),
+    title: row.Title ?? "",
+    titlePrefix: prefix,
+    titleAccent: accent,
+    subtitle: row.Subtitle ?? tagline,
+    age,
+    genre: row.Genre ?? "",
+    releaseDate: formatReleaseDate(row.ReleaseDate),
+    imdbScore,
+    audienceScore,
+    duration: row.Duration ? `${toNumber(row.Duration)} min` : "",
+    tagline,
+    synopsis: row.Description?.trim() || "Nội dung phim đang được cập nhật.",
+    director: row.Director ?? "",
+    starring: row.Starring ?? "",
+    formats: formats.length > 0 ? formats : ["2D"],
+    poster,
+    backdrop: row.BackdropUrl || poster,
+    trailer: {
+      label: "OFFICIAL TRAILER",
+      quality: "HD",
+      url: row.TrailerUrl ?? "",
+      duration: "",
+      currentTime: "00:00",
+      totalTime: "00:00",
+      resolution: "1080p",
+    },
+    ageNotice: (row.AgeNotice ?? "").trim() || AGE_NOTICE[age],
+    cast: buildCast(row.Starring ?? ""),
+  };
+}
+
+/** Chi tiết 1 phim theo MovieID — BE trả 404 nếu phim không tồn tại. */
+export async function fetchMovieDetail(movieId: number): Promise<MovieDetailData> {
+  const row = await request<RawMovie>(`/api/movies/${encodeURIComponent(String(movieId))}`);
+  return mapMovieDetail(row);
+}
+
+/** Đưa MovieDetailData về shape `Movie` để trang chọn ghế dùng lại BookingContext. */
+export function toBookingMovie(detail: MovieDetailData): Movie {
+  return {
+    id: detail.id,
+    title: detail.title,
+    subtitle: detail.subtitle,
+    age: detail.age,
+    tags: detail.formats
+      .filter((format) => /imax|4dx|screenx/i.test(format))
+      .slice(0, 2)
+      .map((format) => format.toUpperCase()),
+    genre: detail.genre,
+    formats: detail.formats.join(" • ") || "2D",
+    rating: detail.imdbScore,
+    poster: detail.poster,
+  };
+}
+
+/* ------------ Lịch chiếu thật -> ShowDate[] + Cinema[] của ShowtimeSelector ------------ */
+
+export interface MovieShowtimesView {
+  dates: ShowDate[];
+  cinemas: Cinema[];
+  totals: ShowtimeTotals;
+  thresholds: { lowSeatThreshold: number; salesCutoffMinutes: number };
+  today: string;
+  window: { from: string; to: string; days: number };
+}
+
+/**
+ * BE trả Cụm rạp -> Định dạng -> Suất chiếu, còn ShowtimeSelector cần đúng shape
+ * ShowDate[]/Cinema[] nên gom lại ở đây (giữ nguyên ghế trống + cờ khóa bán vé).
+ */
+export function mapShowtimesToView(result: MovieShowtimesResult): MovieShowtimesView {
+  return {
+    dates: result.availableDates.map((date) => ({
+      id: date.date,
+      weekDay: date.weekDay,
+      fullName: date.fullName,
+      day: date.day,
+      month: date.month,
+      slots: date.slots,
+    })),
+    cinemas: result.cinemas.map((cinema) => ({
+      id: String(cinema.cinemaId),
+      name: cinema.name || cinema.slug || "SENEMA",
+      branch: cinema.branch,
+      address: cinema.address,
+      distance: cinema.distance,
+      perk: cinema.perk || undefined,
+      halls: cinema.formats.map((group) => ({
+        id: `${cinema.cinemaId}-${group.format}-${group.roomType}`,
+        format:
+          group.roomType && group.roomType !== group.format
+            ? `${group.format} • ${group.roomType}`
+            : group.format,
+        showtimes: group.showtimes.map((item) => ({
+          showtimeId: item.showtimeId,
+          id: String(item.showtimeId),
+          startTime: item.startTime,
+          endTime: item.endTime,
+          hall: item.hall,
+          hallNote: item.hallNote,
+          seatsLeft: item.seatsLeft,
+          availability: item.availability,
+          price: item.price,
+          isClosed: item.isClosed,
+          isSoldOut: item.isSoldOut,
+        })),
+      })),
+    })),
+    totals: result.totals,
+    thresholds: result.thresholds,
+    today: result.today,
+    window: result.window,
+  };
 }

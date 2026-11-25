@@ -34,3 +34,11 @@ export const searchMoviesQuerySchema = z.object({
       .max(100, 'Từ khoá tối đa 100 ký tự')
   ),
 });
+
+/** Tham số đường dẫn /:id — MovieID là số nguyên dương. */
+export const movieIdParamSchema = z.object({
+  id: z.coerce
+    .number({ error: 'MovieID không hợp lệ' })
+    .int('MovieID phải là số nguyên')
+    .positive('MovieID phải lớn hơn 0'),
+});

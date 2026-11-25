@@ -8,8 +8,12 @@ import { BookingContext } from './useBooking'
 /** Suất chiếu người dùng đã chọn (hiển thị ở trang chọn ghế, thanh toán...) */
 export interface ShowtimeInfo {
   id: string
+  /** ShowtimeID thật trong DB — dùng cho API giữ ghế / thanh toán ở các chặng sau. */
+  showtimeId: number
   time: string // 20:15
   date: string // Thursday, 24 OCT
+  /** Ngày chiếu dạng YYYY-MM-DD để lọc lại lịch chiếu. */
+  dateISO: string
   cinemaName: string
   hallName: string
   price: number // giá vé gốc của suất

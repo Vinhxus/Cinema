@@ -24,3 +24,13 @@ export async function searchMovies(req, res, next) {
     return next(err);
   }
 }
+
+/** GET /api/movies/:id — chi tiết 1 phim cho trang MovieDetail. */
+export async function getMovieById(req, res, next) {
+  try {
+    const data = await movieService.getMovieById(Number(req.params.id));
+    return sendSuccess(res, data, 200);
+  } catch (err) {
+    return next(err);
+  }
+}

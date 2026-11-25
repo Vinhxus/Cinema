@@ -71,7 +71,7 @@ const Spot = () => {
   function handleBookNow() {
     if (!featured) return;
     selectMovie(featured);
-    navigate("/movie");
+    navigate(`/movie/${featured.id}`);
   }
 
   function handlePreview(movie: MovieSummary) {

@@ -89,7 +89,7 @@ export default function Header() {
   function handlePick(movie: MovieSummary) {
     selectMovie(movie);
     resetSearch();
-    navigate("/movie");
+    navigate(`/movie/${movie.id}`);
   }
 
   return (
