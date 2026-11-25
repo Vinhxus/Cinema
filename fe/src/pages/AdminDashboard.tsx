@@ -1,15 +1,7 @@
-﻿import { useNavigate } from 'react-router-dom';
-import { ADMIN_ROUTES } from './adminRoutes';
-import { useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  LayoutGrid,
-  Clapperboard,
-  CalendarDays,
-  Armchair,
-  ScanLine,
-  Settings,
   Download,
-  Calendar,
   ChevronDown,
   Banknote,
   Ticket,
@@ -18,24 +10,23 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  RefreshCw,
   type LucideIcon,
 } from 'lucide-react';
-import Header from '../components/common/Header';
-import Footer from '../components/common/Footer';
+import AdminLayout, {
+  type AdminTabId,
+  type NavItemConfig,
+} from '../components/admin/AdminLayout';
+import {
+  ApiError,
+  roomsApi,
+  statsApi,
+  type AdminStatsResponse,
+  type Room,
+} from '../api/adminApi';
+import { getTodayDateString, useAdminSession } from '../hooks/useAdminSession';
 
-export type AdminTabId =
-  | 'overview'
-  | 'movies'
-  | 'showtimes'
-  | 'seating'
-  | 'checkin'
-  | 'settings';
-
-export interface NavItemConfig {
-  id: AdminTabId;
-  label: string;
-  icon: LucideIcon;
-}
+export type { AdminTabId, NavItemConfig };
 
 export interface KpiCardProps {
   title: string;
@@ -45,189 +36,43 @@ export interface KpiCardProps {
   icon: LucideIcon;
 }
 
-export interface ChartBarData {
-  label: string;
-  value: number;
-  displayValue: string;
-  heightClass: string;
-  colorClass: string;
-}
-
-export interface ScreeningRowData {
-  id: string;
-  showtime: string;
-  movie: string;
-  screen: string;
-  ticketsSold: string;
-  status: string;
-  statusVariant: 'success' | 'warning';
-}
-
-export interface OperationEventData {
-  id: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  iconColorClass: string;
-}
-
 export interface AdminDashboardProps {
-  managedCinemaName?: string;
-  managedCinemaLocation?: string;
   useSharedFooter?: boolean;
   activeTab?: AdminTabId;
   onNavigate?: (tab: AdminTabId) => void;
 }
 
-const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
-  { id: 'overview', label: 'Overview', icon: LayoutGrid },
-  { id: 'movies', label: 'Movie management', icon: Clapperboard },
-  { id: 'showtimes', label: 'Showtimes', icon: CalendarDays },
-  { id: 'seating', label: 'Seating & pricing', icon: Armchair },
-  { id: 'checkin', label: 'Ticket check-in', icon: ScanLine },
-];
+function addDaysToIso(dateStr: string, delta: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + delta));
+  return dt.toISOString().slice(0, 10);
+}
 
-const KPI_METRICS: KpiCardProps[] = [
-  {
-    title: "Today's revenue",
-    value: '102.600.000 ₫',
-    subtext: '↑ 12.8% vs. yesterday',
-    subtextVariant: 'positive',
-    icon: Banknote,
-  },
-  {
-    title: 'Tickets sold',
-    value: '1,008 tickets',
-    subtext: '↑ 8.2% vs. yesterday',
-    subtextVariant: 'positive',
-    icon: Ticket,
-  },
-  {
-    title: 'Occupancy rate',
-    value: '68.5%',
-    subtext: '↑ 5.1 percentage points',
-    subtextVariant: 'positive',
-    icon: Users,
-  },
-  {
-    title: "Today's screenings",
-    value: '16 screenings',
-    subtext: '8 completed · 8 upcoming',
-    subtextVariant: 'neutral',
-    icon: Film,
-  },
-];
+function formatVnd(amount: number): string {
+  return `${new Intl.NumberFormat('vi-VN').format(Math.round(amount))} ₫`;
+}
 
-const REVENUE_BARS: ChartBarData[] = [
-  { label: '07/10', value: 9.2, displayValue: '9,2', heightClass: 'h-[42px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '08/10', value: 12.0, displayValue: '12,0', heightClass: 'h-[56px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '09/10', value: 14.8, displayValue: '14,8', heightClass: 'h-[72px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '10/10', value: 19.2, displayValue: '19,2', heightClass: 'h-[94px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '11/10', value: 20.4, displayValue: '20,4', heightClass: 'h-[104px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '12/10', value: 21.8, displayValue: '21,8', heightClass: 'h-[116px]', colorClass: 'bg-[#DC2626]' },
-  { label: '13/10', value: 25.2, displayValue: '25,2', heightClass: 'h-[136px]', colorClass: 'bg-[#DC2626]' },
-];
+function formatShortDate(dateStr: string): string {
+  const [, m, d] = dateStr.split('-');
+  return `${d}/${m}`;
+}
 
-const ATTENDANCE_BARS: ChartBarData[] = [
-  { label: '10:00', value: 92, displayValue: '92', heightClass: 'h-[36px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '12:00', value: 148, displayValue: '148', heightClass: 'h-[62px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '14:00', value: 204, displayValue: '204', heightClass: 'h-[94px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '18:00', value: 252, displayValue: '252', heightClass: 'h-[128px]', colorClass: 'bg-[#DC2626]' },
-  { label: '20:00', value: 192, displayValue: '192', heightClass: 'h-[86px]', colorClass: 'bg-[#F5B5A8]' },
-  { label: '22:00', value: 120, displayValue: '120', heightClass: 'h-[48px]', colorClass: 'bg-[#F5B5A8]' },
-];
-
-const UPCOMING_SCREENINGS: ScreeningRowData[] = [
-  {
-    id: 'scr-1',
-    showtime: '17:45',
-    movie: 'Dune: Hành tinh cát 2',
-    screen: 'Screen 01',
-    ticketsSold: '82/104',
-    status: 'Check-in open',
-    statusVariant: 'success',
-  },
-  {
-    id: 'scr-2',
-    showtime: '18:00',
-    movie: 'Mai',
-    screen: 'Screen 02',
-    ticketsSold: '76/96',
-    status: 'Upcoming',
-    statusVariant: 'warning',
-  },
-  {
-    id: 'scr-3',
-    showtime: '18:30',
-    movie: 'Lật mặt 7: Một điều ước',
-    screen: 'Screen 03',
-    ticketsSold: '64/88',
-    status: 'Upcoming',
-    statusVariant: 'warning',
-  },
-  {
-    id: 'scr-4',
-    showtime: '19:00',
-    movie: 'Đào, phở và piano',
-    screen: 'Screen 04',
-    ticketsSold: '42/80',
-    status: 'Upcoming',
-    statusVariant: 'warning',
-  },
-];
-
-const OPERATION_EVENTS: OperationEventData[] = [
-  {
-    id: 'op-1',
-    title: 'Screen 01 handover',
-    description: 'Cleaning completed · 17:20',
-    icon: CheckCircle2,
-    iconColorClass: 'text-[#10B981]',
-  },
-  {
-    id: 'op-2',
-    title: '2 refund requests',
-    description: 'Orders SN-261013-042 and -067',
-    icon: AlertCircle,
-    iconColorClass: 'text-[#D97706]',
-  },
-  {
-    id: 'op-3',
-    title: 'Scanner at gate 02',
-    description: 'Connected · battery 86%',
-    icon: ScanLine,
-    iconColorClass: 'text-[#475569]',
-  },
-];
-
-function SidebarNavItem({
-  item,
-  isActive,
-  onSelect,
-}: {
-  item: NavItemConfig;
-  isActive: boolean;
-  onSelect: (id: AdminTabId) => void;
-}) {
-  const Icon = item.icon;
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(item.id)}
-      className={`group flex h-10 w-full items-center gap-3 rounded-lg px-3 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20 ${
-        isActive
-          ? 'bg-[#FEF2F2] text-[#DC2626]'
-          : 'text-[#475569] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
-      }`}
-    >
-      <Icon
-        className={`h-4 w-4 shrink-0 transition-colors ${
-          isActive ? 'text-[#DC2626]' : 'text-[#64748B] group-hover:text-[#0F172A]'
-        }`}
-      />
-      <span className="truncate">{item.label}</span>
-    </button>
-  );
+function formatPercentChange(todayVal: number, yesterdayVal: number, suffix = 'vs. yesterday'): {
+  text: string;
+  variant: 'positive' | 'neutral';
+} {
+  if (yesterdayVal === 0 && todayVal === 0) {
+    return { text: `No activity ${suffix}`, variant: 'neutral' };
+  }
+  if (yesterdayVal === 0) {
+    return { text: `↑ 100% ${suffix}`, variant: 'positive' };
+  }
+  const diff = ((todayVal - yesterdayVal) / yesterdayVal) * 100;
+  const arrow = diff >= 0 ? '↑' : '↓';
+  return {
+    text: `${arrow} ${Math.abs(diff).toFixed(1)}% ${suffix}`,
+    variant: diff >= 0 ? 'positive' : 'neutral',
+  };
 }
 
 function KpiCard({ title, value, subtext, subtextVariant, icon: Icon }: KpiCardProps) {
@@ -268,345 +113,492 @@ function DashboardCard({
 }
 
 export default function AdminDashboard({
-  managedCinemaName = 'SENEMA Nguyễn Du',
-  managedCinemaLocation = 'Ho Chi Minh City · 4 screens',
   useSharedFooter = false,
   activeTab = 'overview',
   onNavigate,
 }: AdminDashboardProps) {
-  const [selectedScreen, setSelectedScreen] = useState<string>('All screens');
-
   const navigate = useNavigate();
+  const {
+    user,
+    cinemas,
+    selectedCinemaId,
+    setSelectedCinemaId,
+    selectedCinema,
+    isDbConnected,
+  } = useAdminSession(['ADMIN']);
 
-  const handleSelectNav = (id: AdminTabId) => {
-    const route = ADMIN_ROUTES[(typeof id !== 'undefined' ? (id as AdminTabId) : (tabId as AdminTabId))];
-    if (route) navigate(route);
-    if (onNavigate) {
-      onNavigate(id);
+  const [selectedDate, setSelectedDate] = useState<string>(() => getTodayDateString());
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('ALL');
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [stats, setStats] = useState<AdminStatsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedCinemaId) return;
+    let cancelled = false;
+    roomsApi
+      .list({ cinema_id: selectedCinemaId })
+      .then((list) => {
+        if (!cancelled) {
+          setRooms(list);
+          setSelectedRoomId('ALL');
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCinemaId]);
+
+  const loadStats = async () => {
+    if (!selectedCinemaId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const from = addDaysToIso(selectedDate, -6);
+      const data = await statsApi.getStats({
+        from,
+        to: selectedDate,
+        cinema_id: selectedCinemaId,
+        room_id: selectedRoomId !== 'ALL' ? Number(selectedRoomId) : undefined,
+      });
+      setStats(data);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to load statistics');
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadStats();
+  }, [selectedCinemaId, selectedDate, selectedRoomId]);
+
+  const kpiMetrics = useMemo<KpiCardProps[]>(() => {
+    const today = stats?.summary.today;
+    const yesterday = stats?.summary.yesterday;
+    const revDelta = formatPercentChange(
+      today?.revenue || 0,
+      yesterday?.revenue || 0
+    );
+    const ticketDelta = formatPercentChange(
+      today?.ticketsSold || 0,
+      yesterday?.ticketsSold || 0
+    );
+    const occDiff = (today?.occupancyRate || 0) - (yesterday?.occupancyRate || 0);
+
+    return [
+      {
+        title: "Day's revenue",
+        value: formatVnd(today?.revenue || 0),
+        subtext: revDelta.text,
+        subtextVariant: revDelta.variant,
+        icon: Banknote,
+      },
+      {
+        title: 'Tickets sold',
+        value: `${today?.ticketsSold ?? 0} tickets`,
+        subtext: ticketDelta.text,
+        subtextVariant: ticketDelta.variant,
+        icon: Ticket,
+      },
+      {
+        title: 'Occupancy rate',
+        value: `${(today?.occupancyRate ?? 0).toFixed(1)}%`,
+        subtext: `${occDiff >= 0 ? '↑' : '↓'} ${Math.abs(occDiff).toFixed(1)} percentage points`,
+        subtextVariant: occDiff >= 0 ? 'positive' : 'neutral',
+        icon: Users,
+      },
+      {
+        title: "Day's screenings",
+        value: `${today?.totalScreenings ?? 0} screenings`,
+        subtext: `${today?.completedScreenings ?? 0} completed · ${today?.upcomingScreenings ?? 0} upcoming`,
+        subtextVariant: 'neutral',
+        icon: Film,
+      },
+    ];
+  }, [stats]);
+
+  const maxDailyRevenue = useMemo(() => {
+    const vals = stats?.daily.map((d) => d.revenue) || [0];
+    return Math.max(1, ...vals);
+  }, [stats]);
+
+  const maxSlotTickets = useMemo(() => {
+    const vals = stats?.attendanceByTimeSlot.map((s) => s.ticketCount) || [0];
+    return Math.max(1, ...vals);
+  }, [stats]);
+
+  const peakSlot = useMemo(() => {
+    if (!stats?.attendanceByTimeSlot.length) return null;
+    return stats.attendanceByTimeSlot.reduce((best, cur) =>
+      cur.ticketCount > best.ticketCount ? cur : best
+    );
+  }, [stats]);
+
+  const handleExportCsv = () => {
+    if (!stats) return;
+    const rows = [
+      ['Date', 'Tickets Sold', 'Revenue (VND)'],
+      ...stats.daily.map((d) => [d.date, String(d.ticketCount), String(d.revenue)]),
+    ];
+    const csv = rows.map((r) => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `senema-stats-${selectedDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#F8FAFC] text-[#0F172A]">
-      <Header />
+    <AdminLayout
+      activeTab={activeTab}
+      cinemas={cinemas}
+      selectedCinemaId={selectedCinemaId}
+      onSelectCinema={setSelectedCinemaId}
+      user={user}
+      isDbConnected={isDbConnected}
+      useSharedFooter={useSharedFooter}
+      onNavigate={onNavigate}
+    >
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#0F172A]">
+            Operations overview
+          </h1>
+          <p className="mt-1 text-xs font-normal text-[#475569]">
+            Track business performance and operations at{' '}
+            {selectedCinema?.CinemaName || 'SENEMA'}.
+          </p>
+        </div>
 
-      <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col lg:flex-row">
-        <aside className="flex w-full shrink-0 flex-col justify-between border-b border-[#E2E8F0] bg-white p-4 lg:w-[210px] lg:border-b-0 lg:border-r lg:px-4 lg:py-6">
-          <div className="flex flex-col gap-6">
-            <div className="rounded-xl border border-[#F1F5F9] bg-[#F8FAFC] p-3.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
-                MANAGED CINEMA
-              </div>
-              <div className="mt-1 text-xs font-extrabold text-[#0F172A]">
-                {managedCinemaName}
-              </div>
-              <div className="mt-0.5 text-[11px] text-[#64748B]">
-                {managedCinemaLocation}
-              </div>
-            </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={loadStats}
+            disabled={loading}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 text-xs font-semibold text-[#475569] hover:bg-[#F8FAFC] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={!stats}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3.5 text-xs font-semibold text-[#0F172A] shadow-2xs transition-colors hover:bg-[#F8FAFC] disabled:opacity-50"
+          >
+            <Download className="h-3.5 w-3.5 text-[#475569]" />
+            <span>Export report</span>
+          </button>
+        </div>
+      </div>
 
-            <nav className="flex flex-col gap-1" aria-label="Admin sidebar navigation">
-              {PRIMARY_NAV_ITEMS.map((item) => (
-                <SidebarNavItem
-                  key={item.id}
-                  item={item}
-                  isActive={item.id === activeTab}
-                  onSelect={handleSelectNav}
-                />
+      {error && (
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-xs font-semibold text-[#B91C1C]">
+          {error}
+        </div>
+      )}
+
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <input
+            type="date"
+            aria-label="Select date"
+            value={selectedDate}
+            onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+            className="h-9 rounded-lg border border-[#E2E8F0] bg-white px-3 text-xs font-medium text-[#0F172A] focus:border-[#DC2626] focus:outline-none"
+          />
+
+          <div className="relative inline-flex items-center">
+            <select
+              aria-label="Filter by screen"
+              value={selectedRoomId}
+              onChange={(e) => setSelectedRoomId(e.target.value)}
+              className="h-9 appearance-none rounded-lg border border-[#E2E8F0] bg-white pr-9 pl-3 text-xs font-medium text-[#0F172A] transition-colors hover:border-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/20"
+            >
+              <option value="ALL">All screens</option>
+              {rooms.map((room) => (
+                <option key={room.RoomID} value={String(room.RoomID)}>
+                  {room.RoomNumber}
+                </option>
               ))}
-
-              <div className="my-3 border-t border-[#F1F5F9]" />
-
-              <SidebarNavItem
-                item={{ id: 'settings', label: 'System settings', icon: Settings }}
-                isActive={activeTab === 'settings'}
-                onSelect={handleSelectNav}
-              />
-            </nav>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-[#64748B]" />
           </div>
+        </div>
 
-          <div className="mt-6 rounded-xl border border-[#E2E8F0]/60 bg-[#F0FDF4]/60 p-3.5 lg:mt-0">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#10B981]" />
-              <span className="text-[11px] font-bold text-[#065F46]">
-                All systems operational
+        <div className="text-[11px] font-medium text-[#64748B]">
+          7-day range: {stats?.range.from || '—'} to {stats?.range.to || selectedDate} ·
+          Total: <strong className="text-[#0F172A]">{formatVnd(stats?.summary.totalRevenue || 0)}</strong>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {kpiMetrics.map((kpi) => (
+          <KpiCard key={kpi.title} {...kpi} />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <DashboardCard className="flex flex-col justify-between lg:col-span-7">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-[#0F172A]">
+                Revenue over the last 7 days
+              </h2>
+              <span className="text-[11px] font-medium text-[#64748B]">
+                {stats ? `${formatShortDate(stats.range.from)}–${formatShortDate(stats.range.to)}` : '—'}
               </span>
             </div>
-            <div className="mt-1 text-[10px] font-medium text-[#64748B]">
-              Synced at 17:25
+
+            <div className="mt-1.5 flex items-center justify-between text-[11px] text-[#64748B]">
+              <span>Unit: million VND</span>
+              <div className="flex items-center gap-1.5 font-medium text-[#475569]">
+                <span className="h-2 w-2 rounded-full bg-[#DC2626]" />
+                <span>Paid bookings revenue</span>
+              </div>
             </div>
           </div>
-        </aside>
 
-        <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6 lg:p-8">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-[#0F172A]">
-                Operations overview
-              </h1>
-              <p className="mt-1 text-xs font-normal text-[#475569]">
-                Track business performance and operations at {managedCinemaName}.
-              </p>
+          <div className="relative mt-8 pt-4">
+            <div className="pointer-events-none absolute inset-x-0 top-4 bottom-6 flex flex-col justify-between">
+              <div className="w-full border-b border-dashed border-[#F1F5F9]" />
+              <div className="w-full border-b border-dashed border-[#F1F5F9]" />
+              <div className="w-full border-b border-dashed border-[#F1F5F9]" />
+              <div className="w-full border-b border-[#E2E8F0]" />
             </div>
 
+            <div className="relative z-10 grid grid-cols-7 items-end gap-2.5 sm:gap-4">
+              {(stats?.daily || []).map((bar) => {
+                const heightPx =
+                  bar.revenue > 0
+                    ? Math.max(12, Math.round((bar.revenue / maxDailyRevenue) * 136))
+                    : 4;
+                const isSelectedDay = bar.date === selectedDate;
+                const millions = (bar.revenue / 1_000_000).toFixed(1).replace('.', ',');
+
+                return (
+                  <div key={bar.date} className="flex flex-col items-center">
+                    <span className="mb-1.5 text-[10px] font-semibold text-[#64748B]">
+                      {millions}
+                    </span>
+                    <div
+                      title={`${bar.date}: ${formatVnd(bar.revenue)} (${bar.ticketCount} tickets)`}
+                      style={{ height: `${heightPx}px` }}
+                      className={`w-full rounded-t-sm transition-all ${
+                        bar.revenue === 0
+                          ? 'bg-[#E2E8F0]'
+                          : isSelectedDay
+                          ? 'bg-[#DC2626]'
+                          : 'bg-[#F5B5A8]'
+                      }`}
+                    />
+                    <span className="mt-2 text-[10px] font-medium text-[#64748B]">
+                      {formatShortDate(bar.date)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </DashboardCard>
+
+        <DashboardCard className="flex flex-col justify-between lg:col-span-5">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-[#0F172A]">
+                Attendance by time slot
+              </h2>
+              <span className="text-[11px] font-medium text-[#64748B]">
+                Based on tickets sold
+              </span>
+            </div>
+
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <span className="text-xl font-extrabold text-[#0F172A]">
+                {stats?.summary.today.ticketsSold ?? 0}
+              </span>
+              <span className="text-[11px] font-medium text-[#64748B]">
+                {peakSlot && peakSlot.ticketCount > 0
+                  ? `guests · peak at ${peakSlot.slot}`
+                  : 'guests on selected day'}
+              </span>
+            </div>
+          </div>
+
+          <div className="relative mt-6 pt-4">
+            {stats?.attendanceByTimeSlot.length ? (
+              <div className="relative z-10 flex items-end justify-between gap-2.5">
+                {stats.attendanceByTimeSlot.slice(0, 8).map((slot) => {
+                  const heightPx =
+                    slot.ticketCount > 0
+                      ? Math.max(12, Math.round((slot.ticketCount / maxSlotTickets) * 128))
+                      : 4;
+                  const isPeak = peakSlot && slot.slot === peakSlot.slot && slot.ticketCount > 0;
+                  return (
+                    <div key={slot.slot} className="flex flex-1 flex-col items-center">
+                      <span className="mb-1.5 text-[10px] font-semibold text-[#64748B]">
+                        {slot.ticketCount}
+                      </span>
+                      <div
+                        style={{ height: `${heightPx}px` }}
+                        className={`w-full rounded-t-sm transition-all ${
+                          slot.ticketCount === 0
+                            ? 'bg-[#E2E8F0]'
+                            : isPeak
+                            ? 'bg-[#DC2626]'
+                            : 'bg-[#F5B5A8]'
+                        }`}
+                      />
+                      <span className="mt-2 text-[10px] font-medium text-[#64748B]">
+                        {slot.slot}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-10 text-center text-xs text-[#94A3B8]">
+                No screenings scheduled on {selectedDate}
+              </div>
+            )}
+          </div>
+        </DashboardCard>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <DashboardCard className="lg:col-span-7">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-bold text-[#0F172A]">
+              Screenings on {formatShortDate(selectedDate)}
+            </h2>
             <button
               type="button"
-              className="inline-flex h-9 items-center justify-center gap-2 self-start rounded-lg border border-[#E2E8F0] bg-white px-3.5 text-xs font-semibold text-[#0F172A] shadow-2xs transition-colors hover:bg-[#F8FAFC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20 active:scale-[0.99] sm:self-auto"
+              onClick={() => navigate('/admin/showtimes')}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#64748B] transition-colors hover:text-[#0F172A]"
             >
-              <Download className="h-3.5 w-3.5 text-[#475569]" />
-              <span>Export report</span>
+              <span>View showtimes</span>
+              <ArrowRight className="h-3 w-3" />
             </button>
           </div>
 
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                className="inline-flex h-9 items-center gap-6 rounded-lg border border-[#E2E8F0] bg-white px-3 text-xs font-medium text-[#0F172A] transition-colors hover:border-[#CBD5E1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20"
-              >
-                <span>Today, 13/10/2026</span>
-                <Calendar className="h-3.5 w-3.5 text-[#64748B]" />
-              </button>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[480px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC] text-[11px] font-semibold text-[#64748B]">
+                  <th className="rounded-l-md py-2.5 pr-3 pl-3">Showtime</th>
+                  <th className="px-3 py-2.5">Movie</th>
+                  <th className="px-3 py-2.5">Screen</th>
+                  <th className="px-3 py-2.5">Tickets sold</th>
+                  <th className="rounded-r-md py-2.5 pr-3 pl-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F1F5F9] text-xs">
+                {stats?.upcomingScreenings.length ? (
+                  stats.upcomingScreenings.slice(0, 8).map((row) => (
+                    <tr
+                      key={row.ShowtimeID}
+                      className="transition-colors hover:bg-[#F8FAFC]/80"
+                    >
+                      <td className="py-3.5 pr-3 pl-3 font-bold text-[#0F172A]">
+                        {row.StartTime.slice(0, 5)}
+                      </td>
+                      <td className="px-3 py-3.5 font-medium text-[#0F172A]">
+                        {row.MovieTitle}
+                      </td>
+                      <td className="px-3 py-3.5 text-[#475569]">
+                        {row.RoomNumber}
+                      </td>
+                      <td className="px-3 py-3.5 font-medium text-[#475569]">
+                        {row.SoldTickets}/{row.Capacity}
+                      </td>
+                      <td className="py-3.5 pr-3 pl-3">
+                        <span
+                          className={`inline-flex items-center font-semibold ${
+                            row.Status === 'CHECKIN_OPEN'
+                              ? 'text-[#059669]'
+                              : row.Status === 'COMPLETED'
+                              ? 'text-[#64748B]'
+                              : 'text-[#D97706]'
+                          }`}
+                        >
+                          {row.Status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="py-6 text-center text-xs text-[#94A3B8]"
+                    >
+                      No screenings found for this filter.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DashboardCard>
 
-              <div className="relative inline-flex items-center">
-                <select
-                  aria-label="Filter by screen"
-                  value={selectedScreen}
-                  onChange={(e) => setSelectedScreen(e.target.value)}
-                  className="h-9 appearance-none rounded-lg border border-[#E2E8F0] bg-white pr-9 pl-3 text-xs font-medium text-[#0F172A] transition-colors hover:border-[#CBD5E1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20"
-                >
-                  <option value="All screens">All screens</option>
-                  <option value="Screen 01">Screen 01</option>
-                  <option value="Screen 02">Screen 02</option>
-                  <option value="Screen 03">Screen 03</option>
-                  <option value="Screen 04">Screen 04</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-[#64748B]" />
-              </div>
+        <DashboardCard className="flex flex-col justify-between lg:col-span-5">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-[#0F172A]">
+                Operations status
+              </h2>
+              <span className="text-[11px] font-medium text-[#64748B]">
+                Live cinema telemetry
+              </span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#64748B]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#64748B]" />
-              <span>Data updates every 5 minutes</span>
+            <div className="mt-3.5 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold text-[#059669]">
+                {stats?.operations.readyRooms ?? 0}/
+                {stats?.operations.totalRooms ?? 0} screens ready
+              </span>
+              {(stats?.operations.attentionRooms ?? 0) > 0 && (
+                <span className="inline-flex items-center rounded-full bg-[#FEF3C7] px-2.5 py-1 text-[11px] font-bold text-[#D97706]">
+                  {stats?.operations.attentionRooms} need attention
+                </span>
+              )}
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {KPI_METRICS.map((kpi) => (
-              <KpiCard key={kpi.title} {...kpi} />
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <DashboardCard className="flex flex-col justify-between lg:col-span-7">
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-sm font-bold text-[#0F172A]">
-                    Revenue over the last 7 days
-                  </h2>
-                  <span className="text-[11px] font-medium text-[#64748B]">
-                    07–13/10/2026
+            <div className="mt-5 flex flex-col divide-y divide-[#F1F5F9]">
+              <div className="flex items-start gap-3 py-3 first:pt-0">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#10B981]" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#0F172A]">
+                    Cinema rooms synchronized
+                  </span>
+                  <span className="mt-0.5 text-[11px] text-[#64748B]">
+                    {stats?.operations.readyRooms ?? 0} screens in READY status
                   </span>
                 </div>
+              </div>
 
-                <div className="mt-1.5 flex items-center justify-between text-[11px] text-[#64748B]">
-                  <span>Unit: million VND</span>
-                  <div className="flex items-center gap-1.5 font-medium text-[#475569]">
-                    <span className="h-2 w-2 rounded-full bg-[#DC2626]" />
-                    <span>Ticket revenue</span>
+              {(stats?.operations.recentRefunds || []).map((rf) => (
+                <div key={rf.RefundID} className="flex items-start gap-3 py-3 last:pb-0">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#D97706]" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-[#0F172A]">
+                      Refund {rf.RefundReference} ({rf.Status})
+                    </span>
+                    <span className="mt-0.5 text-[11px] text-[#64748B]">
+                      Order {rf.BookingCode} · {formatVnd(Number(rf.RefundAmount))}
+                    </span>
                   </div>
                 </div>
-              </div>
-
-              <div className="relative mt-8 pt-4">
-                <div className="pointer-events-none absolute inset-x-0 top-4 bottom-6 flex flex-col justify-between">
-                  <div className="w-full border-b border-dashed border-[#F1F5F9]" />
-                  <div className="w-full border-b border-dashed border-[#F1F5F9]" />
-                  <div className="w-full border-b border-dashed border-[#F1F5F9]" />
-                  <div className="w-full border-b border-[#E2E8F0]" />
-                </div>
-
-                <div className="relative z-10 grid grid-cols-7 items-end gap-2.5 sm:gap-4">
-                  {REVENUE_BARS.map((bar) => (
-                    <div key={bar.label} className="flex flex-col items-center">
-                      <span className="mb-1.5 text-[10px] font-semibold text-[#64748B]">
-                        {bar.displayValue}
-                      </span>
-                      <div
-                        className={`w-full rounded-t-sm transition-opacity hover:opacity-90 ${bar.heightClass} ${bar.colorClass}`}
-                      />
-                      <span className="mt-2 text-[10px] font-medium text-[#64748B]">
-                        {bar.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </DashboardCard>
-
-            <DashboardCard className="flex flex-col justify-between lg:col-span-5">
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-sm font-bold text-[#0F172A]">
-                    Attendance by time slot
-                  </h2>
-                  <span className="text-[11px] font-medium text-[#64748B]">
-                    Based on tickets sold
-                  </span>
-                </div>
-
-                <div className="mt-2 flex items-baseline gap-1.5">
-                  <span className="text-xl font-extrabold text-[#0F172A]">
-                    1,008
-                  </span>
-                  <span className="text-[11px] font-medium text-[#64748B]">
-                    guests · peak at 18:00
-                  </span>
-                </div>
-              </div>
-
-              <div className="relative mt-6 pt-4">
-                <div className="relative z-10 grid grid-cols-6 items-end gap-2.5 sm:gap-3">
-                  {ATTENDANCE_BARS.map((bar) => (
-                    <div key={bar.label} className="flex flex-col items-center">
-                      <span className="mb-1.5 text-[10px] font-semibold text-[#64748B]">
-                        {bar.displayValue}
-                      </span>
-                      <div
-                        className={`w-full rounded-t-sm transition-opacity hover:opacity-90 ${bar.heightClass} ${bar.colorClass}`}
-                      />
-                      <span className="mt-2 text-[10px] font-medium text-[#64748B]">
-                        {bar.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </DashboardCard>
+              ))}
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <DashboardCard className="lg:col-span-7">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-sm font-bold text-[#0F172A]">
-                  Upcoming screenings
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => handleSelectNav('showtimes')}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#64748B] transition-colors hover:text-[#0F172A] focus-visible:outline-none focus-visible:underline"
-                >
-                  <span>View showtimes</span>
-                  <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
-
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[480px] border-collapse text-left">
-                  <thead>
-                    <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC] text-[11px] font-semibold text-[#64748B]">
-                      <th className="py-2.5 pr-3 pl-3 rounded-l-md">Showtime</th>
-                      <th className="py-2.5 px-3">Movie</th>
-                      <th className="py-2.5 px-3">Screen</th>
-                      <th className="py-2.5 px-3">Tickets sold</th>
-                      <th className="py-2.5 pr-3 pl-3 rounded-r-md">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#F1F5F9] text-xs">
-                    {UPCOMING_SCREENINGS.map((row) => (
-                      <tr
-                        key={row.id}
-                        className="transition-colors hover:bg-[#F8FAFC]/80"
-                      >
-                        <td className="py-3.5 pr-3 pl-3 font-bold text-[#0F172A]">
-                          {row.showtime}
-                        </td>
-                        <td className="py-3.5 px-3 font-medium text-[#0F172A]">
-                          {row.movie}
-                        </td>
-                        <td className="py-3.5 px-3 text-[#475569]">
-                          {row.screen}
-                        </td>
-                        <td className="py-3.5 px-3 font-medium text-[#475569]">
-                          {row.ticketsSold}
-                        </td>
-                        <td className="py-3.5 pr-3 pl-3">
-                          <span
-                            className={`inline-flex items-center font-semibold ${
-                              row.statusVariant === 'success'
-                                ? 'text-[#059669]'
-                                : 'text-[#D97706]'
-                            }`}
-                          >
-                            {row.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </DashboardCard>
-
-            <DashboardCard className="flex flex-col justify-between lg:col-span-5">
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-sm font-bold text-[#0F172A]">
-                    Operations status
-                  </h2>
-                  <span className="text-[11px] font-medium text-[#64748B]">
-                    Afternoon shift
-                  </span>
-                </div>
-
-                <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold text-[#059669]">
-                    4/4 screens ready
-                  </span>
-                  <span className="inline-flex items-center rounded-full bg-[#FEF3C7] px-2.5 py-1 text-[11px] font-bold text-[#D97706]">
-                    2 need attention
-                  </span>
-                </div>
-
-                <div className="mt-5 flex flex-col divide-y divide-[#F1F5F9]">
-                  {OPERATION_EVENTS.map((event) => {
-                    const EventIcon = event.icon;
-                    return (
-                      <div
-                        key={event.id}
-                        className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                      >
-                        <EventIcon
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${event.iconColorClass}`}
-                        />
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-[#0F172A]">
-                            {event.title}
-                          </span>
-                          <span className="mt-0.5 text-[11px] text-[#64748B]">
-                            {event.description}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </DashboardCard>
-          </div>
-        </main>
+        </DashboardCard>
       </div>
-
-      {useSharedFooter ? (
-        <Footer />
-      ) : (
-        <footer className="w-full border-t border-[#E2E8F0] bg-white px-6 py-3.5 text-[11px] font-medium text-[#64748B]">
-          <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-2 sm:flex-row">
-            <span>SENEMA · Cinema dashboard</span>
-            <span>Tuesday, 13/10/2026 · Afternoon shift 14:00–22:00</span>
-          </div>
-        </footer>
-      )}
-    </div>
+    </AdminLayout>
   );
 }

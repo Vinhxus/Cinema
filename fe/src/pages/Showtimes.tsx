@@ -1,143 +1,72 @@
-﻿import { useNavigate } from 'react-router-dom';
-import { ADMIN_ROUTES } from './adminRoutes';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
-  LayoutGrid,
-  Clapperboard,
-  CalendarDays,
-  Armchair,
-  ScanLine,
-  Settings,
   Plus,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   Pencil,
   Copy,
   Trash2,
-  type LucideIcon,
+  X,
 } from 'lucide-react';
-import Header from '../components/common/Header';
-import Footer from '../components/common/Footer';
-import type { AdminTabId, NavItemConfig } from './AdminDashboard';
+import AdminLayout, { type AdminTabId } from '../components/admin/AdminLayout';
+import {
+  ApiError,
+  moviesApi,
+  roomsApi,
+  showtimesApi,
+  type Movie,
+  type Room,
+  type Showtime,
+} from '../api/adminApi';
+import { getTodayDateString, useAdminSession } from '../hooks/useAdminSession';
 
 export interface ShowtimesProps {
-  managedCinemaName?: string;
-  managedCinemaLocation?: string;
   useSharedFooter?: boolean;
   activeTab?: AdminTabId;
   onNavigate?: (tab: AdminTabId) => void;
 }
 
-const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
-  { id: 'overview', label: 'Overview', icon: LayoutGrid },
-  { id: 'movies', label: 'Movie management', icon: Clapperboard },
-  { id: 'showtimes', label: 'Showtimes', icon: CalendarDays },
-  { id: 'seating', label: 'Seating & pricing', icon: Armchair },
-  { id: 'checkin', label: 'Ticket check-in', icon: ScanLine },
+const TIMELINE_START_MIN = 8 * 60;
+const TIMELINE_TOTAL_MIN = 16 * 60;
+const TIME_LABELS = [
+  '08:00',
+  '10:00',
+  '12:00',
+  '14:00',
+  '16:00',
+  '18:00',
+  '20:00',
+  '22:00',
+  '24:00',
 ];
 
-interface ScreeningBlock {
-  id: string;
-  title: string;
-  timeRange: string;
-  subtitle: string;
-  status: 'completed' | 'scheduled' | 'selected';
-  leftPercent: number;
-  widthPercent: number;
+function addDaysToIso(dateStr: string, delta: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + delta));
+  return dt.toISOString().slice(0, 10);
 }
 
-interface ScreenRow {
-  id: string;
-  name: string;
-  seats: number;
-  format: string;
-  blocks: ScreeningBlock[];
+function toMinutes(timeStr: string): number {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
 }
 
-const TIMELINE_DATA: ScreenRow[] = [
-  {
-    id: 's1',
-    name: 'Screen 01',
-    seats: 104,
-    format: '2D',
-    blocks: [
-      { id: 'b1-1', title: 'Dune: Hành tinh cát 2', timeRange: '10:30-13:16', subtitle: 'Completed', status: 'completed', leftPercent: 3.57, widthPercent: 19.76 },
-      { id: 'b1-2', title: 'Mai', timeRange: '13:36-15:47', subtitle: 'Completed', status: 'completed', leftPercent: 25.71, widthPercent: 15.59 },
-      { id: 'b1-3', title: 'Dune: Hành tinh cát 2', timeRange: '17:45-20:31', subtitle: '82/104 tickets', status: 'selected', leftPercent: 55.35, widthPercent: 19.76 },
-      { id: 'b1-4', title: 'Mai', timeRange: '20:51-23:02', subtitle: '45/104 tickets', status: 'scheduled', leftPercent: 77.50, widthPercent: 15.59 },
-    ],
-  },
-  {
-    id: 's2',
-    name: 'Screen 02',
-    seats: 96,
-    format: '2D',
-    blocks: [
-      { id: 'b2-1', title: 'Mai', timeRange: '11:00-13:11', subtitle: 'Completed', status: 'completed', leftPercent: 7.14, widthPercent: 15.59 },
-      { id: 'b2-2', title: 'Lật mặt 7', timeRange: '14:00-16:18', subtitle: 'Completed', status: 'completed', leftPercent: 28.57, widthPercent: 16.42 },
-      { id: 'b2-3', title: 'Mai', timeRange: '18:00-20:11', subtitle: '76/96 tickets', status: 'scheduled', leftPercent: 57.14, widthPercent: 15.59 },
-      { id: 'b2-4', title: 'Lật mặt 7', timeRange: '20:36-22:54', subtitle: '32/96 tickets', status: 'scheduled', leftPercent: 75.71, widthPercent: 16.42 },
-    ],
-  },
-  {
-    id: 's3',
-    name: 'Screen 03',
-    seats: 88,
-    format: '2D',
-    blocks: [
-      { id: 'b3-1', title: 'Lật mặt 7', timeRange: '10:00-12:18', subtitle: 'Completed', status: 'completed', leftPercent: 0, widthPercent: 16.42 },
-      { id: 'b3-2', title: 'Dune: Hành tinh cát 2', timeRange: '13:00-15:46', subtitle: 'Completed', status: 'completed', leftPercent: 21.42, widthPercent: 19.76 },
-      { id: 'b3-3', title: 'Lật mặt 7', timeRange: '18:30-20:48', subtitle: '64/88 tickets', status: 'scheduled', leftPercent: 60.71, widthPercent: 16.42 },
-      { id: 'b3-4', title: 'Mai', timeRange: '21:09-23:20', subtitle: '26/88 tickets', status: 'scheduled', leftPercent: 79.64, widthPercent: 15.59 },
-    ],
-  },
-  {
-    id: 's4',
-    name: 'Screen 04',
-    seats: 80,
-    format: '2D',
-    blocks: [
-      { id: 'b4-1', title: 'Đào, phở và piano', timeRange: '11:30-13:10', subtitle: 'Completed', status: 'completed', leftPercent: 10.71, widthPercent: 11.90 },
-      { id: 'b4-2', title: 'Đào, phở và piano', timeRange: '15:00-16:40', subtitle: 'Completed', status: 'completed', leftPercent: 35.71, widthPercent: 11.90 },
-      { id: 'b4-3', title: 'Đào, phở và piano', timeRange: '19:00-20:40', subtitle: '42/80 tickets', status: 'scheduled', leftPercent: 64.28, widthPercent: 11.90 },
-      { id: 'b4-4', title: 'Đào, phở và piano', timeRange: '21:00-22:40', subtitle: '18/80 tickets', status: 'scheduled', leftPercent: 78.57, widthPercent: 11.90 },
-    ],
-  },
-];
-
-const TIME_LABELS = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', '24:00'];
-const CURRENT_TIME_PERCENT = 52.97;
-
-function SidebarNavItem({
-  item,
-  isActive,
-  onSelect,
-}: {
-  item: NavItemConfig;
-  isActive: boolean;
-  onSelect: (id: AdminTabId) => void;
-}) {
-  const Icon = item.icon;
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(item.id)}
-      className={`group flex h-10 w-full items-center gap-3 rounded-lg px-3 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20 ${
-        isActive
-          ? 'bg-[#FEF2F2] text-[#DC2626]'
-          : 'text-[#475569] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
-      }`}
-    >
-      <Icon
-        className={`h-4 w-4 shrink-0 transition-colors ${
-          isActive ? 'text-[#DC2626]' : 'text-[#64748B] group-hover:text-[#0F172A]'
-        }`}
-      />
-      <span className="truncate">{item.label}</span>
-    </button>
+function calcBlockPosition(startTime: string, endTime: string) {
+  const startMin = toMinutes(startTime);
+  let endMin = toMinutes(endTime);
+  if (endMin <= startMin) {
+    endMin += 24 * 60;
+  }
+  const clampedStart = Math.max(TIMELINE_START_MIN, startMin);
+  const clampedEnd = Math.min(TIMELINE_START_MIN + TIMELINE_TOTAL_MIN, endMin);
+  const leftPercent =
+    ((clampedStart - TIMELINE_START_MIN) / TIMELINE_TOTAL_MIN) * 100;
+  const widthPercent = Math.max(
+    4,
+    ((clampedEnd - clampedStart) / TIMELINE_TOTAL_MIN) * 100
   );
+  return { leftPercent, widthPercent };
 }
 
 function DashboardCard({
@@ -157,315 +86,824 @@ function DashboardCard({
 }
 
 export default function Showtimes({
-  managedCinemaName = 'SENEMA Nguyễn Du',
-  managedCinemaLocation = 'Ho Chi Minh City · 4 screens',
   useSharedFooter = false,
   activeTab = 'showtimes',
   onNavigate,
 }: ShowtimesProps) {
-  const [selectedScreen, setSelectedScreen] = useState<string>('All screens');
-  const [viewMode, setViewMode] = useState<'Daily' | 'Weekly'>('Daily');
+  const {
+    user,
+    cinemas,
+    selectedCinemaId,
+    setSelectedCinemaId,
+    isDbConnected,
+  } = useAdminSession(['ADMIN']);
 
-  const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState<string>(() => getTodayDateString());
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('ALL');
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [showtimes, setShowtimes] = useState<Showtime[]>([]);
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
-  const handleNavClick = (tabId: AdminTabId) => {
-    const route = ADMIN_ROUTES[(typeof id !== 'undefined' ? (id as AdminTabId) : (tabId as AdminTabId))];
-    if (route) navigate(route);
-    if (onNavigate) {
-      onNavigate(tabId);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null);
+  const [editingShowtimeId, setEditingShowtimeId] = useState<number | null>(null);
+  const [formMovieId, setFormMovieId] = useState<string>('');
+  const [formRoomId, setFormRoomId] = useState<string>('');
+  const [formDate, setFormDate] = useState<string>(selectedDate);
+  const [formStartTime, setFormStartTime] = useState<string>('14:00');
+  const [formFormat, setFormFormat] = useState<string>('2D Vietnamese Subs');
+  const [formPrice, setFormPrice] = useState<string>('110000');
+  const [formStatus, setFormStatus] = useState<Showtime['Status']>('SCHEDULED');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copySourceDate, setCopySourceDate] = useState<string>(selectedDate);
+  const [copyTargetDate, setCopyTargetDate] = useState<string>(() =>
+    addDaysToIso(getTodayDateString(), 1)
+  );
+  const [copyRoomId, setCopyRoomId] = useState<string>('ALL');
+  const [copyError, setCopyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    moviesApi
+      .list()
+      .then((list) => {
+        setMovies(list);
+        if (list.length > 0 && !formMovieId) {
+          setFormMovieId(String(list[0].MovieID));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCinemaId) return;
+    roomsApi
+      .list({ cinema_id: selectedCinemaId })
+      .then((list) => {
+        setRooms(list);
+        setSelectedRoomId('ALL');
+        if (list.length > 0) {
+          setFormRoomId(String(list[0].RoomID));
+        }
+      })
+      .catch(() => {});
+  }, [selectedCinemaId]);
+
+  const fetchShowtimes = async () => {
+    if (!selectedCinemaId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const list = await showtimesApi.list({
+        cinema_id: selectedCinemaId,
+        room_id: selectedRoomId !== 'ALL' ? Number(selectedRoomId) : undefined,
+        date: selectedDate,
+      });
+      setShowtimes(list);
+      setSelectedShowtimeId((prev) =>
+        list.some((s) => s.ShowtimeID === prev) ? prev : list[0]?.ShowtimeID ?? null
+      );
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to load showtimes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShowtimes();
+  }, [selectedCinemaId, selectedRoomId, selectedDate]);
+
+  const visibleRooms = useMemo(() => {
+    if (selectedRoomId === 'ALL') return rooms;
+    return rooms.filter((r) => String(r.RoomID) === selectedRoomId);
+  }, [rooms, selectedRoomId]);
+
+  const selectedShowtime =
+    showtimes.find((s) => s.ShowtimeID === selectedShowtimeId) ||
+    showtimes[0] ||
+    null;
+
+  const openCreateModal = () => {
+    setModalMode('create');
+    setEditingShowtimeId(null);
+    setFormMovieId(movies[0] ? String(movies[0].MovieID) : '');
+    setFormRoomId(
+      selectedRoomId !== 'ALL'
+        ? selectedRoomId
+        : rooms[0]
+        ? String(rooms[0].RoomID)
+        : ''
+    );
+    setFormDate(selectedDate);
+    setFormStartTime('14:00');
+    setFormFormat(rooms[0]?.RoomType || '2D Vietnamese Subs');
+    setFormPrice('110000');
+    setFormStatus('SCHEDULED');
+    setFormError(null);
+  };
+
+  const openEditModal = (st: Showtime) => {
+    setModalMode('edit');
+    setEditingShowtimeId(st.ShowtimeID);
+    setFormMovieId(String(st.MovieID));
+    setFormRoomId(String(st.RoomID));
+    setFormDate(st.ShowDate);
+    setFormStartTime(st.StartTime.slice(0, 5));
+    setFormFormat(st.Format);
+    setFormPrice(String(st.BaseTicketPrice));
+    setFormStatus(st.Status);
+    setFormError(null);
+  };
+
+  const handleSaveShowtime = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setFormError(null);
+    setFeedback(null);
+
+    const payload = {
+      movie_id: Number(formMovieId),
+      room_id: Number(formRoomId),
+      show_date: formDate,
+      start_time: formStartTime,
+      format: formFormat.trim(),
+      base_ticket_price: Number(formPrice),
+      status: formStatus,
+    };
+
+    try {
+      if (modalMode === 'create') {
+        const created = await showtimesApi.create(payload);
+        setFeedback(
+          `Created showtime #${created.ShowtimeID} (${created.StartTime.slice(0, 5)}–${created.EndTime.slice(0, 5)}).`
+        );
+        setSelectedDate(created.ShowDate);
+        setSelectedShowtimeId(created.ShowtimeID);
+      } else if (modalMode === 'edit' && editingShowtimeId) {
+        const updated = await showtimesApi.update(editingShowtimeId, payload);
+        setFeedback(`Updated showtime #${updated.ShowtimeID}.`);
+      }
+      setModalMode(null);
+      await fetchShowtimes();
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to save showtime');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteShowtime = async (st: Showtime) => {
+    if (
+      !window.confirm(
+        `Delete showtime "${st.MovieTitle}" (${st.StartTime.slice(0, 5)} on ${st.ShowDate})?`
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    setFeedback(null);
+    try {
+      await showtimesApi.remove(st.ShowtimeID);
+      setFeedback(`Deleted showtime #${st.ShowtimeID}.`);
+      await fetchShowtimes();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to delete showtime');
+    }
+  };
+
+  const openCopyModal = () => {
+    setCopySourceDate(selectedDate);
+    setCopyTargetDate(addDaysToIso(selectedDate, 1));
+    setCopyRoomId(selectedRoomId);
+    setCopyError(null);
+    setCopyOpen(true);
+  };
+
+  const handleCopySubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedCinemaId) return;
+    setSubmitting(true);
+    setCopyError(null);
+    setFeedback(null);
+
+    try {
+      const result = await showtimesApi.copy({
+        source_date: copySourceDate,
+        target_date: copyTargetDate,
+        cinema_id: selectedCinemaId,
+        room_id: copyRoomId !== 'ALL' ? Number(copyRoomId) : undefined,
+      });
+      setCopyOpen(false);
+      setSelectedDate(copyTargetDate);
+      setFeedback(
+        `Copied ${result.createdCount} showtime(s) to ${copyTargetDate}; skipped ${result.skippedCount} conflict(s).`
+      );
+      await fetchShowtimes();
+    } catch (err) {
+      setCopyError(err instanceof ApiError ? err.message : 'Failed to copy schedule');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#F8FAFC] text-[#0F172A]">
-      <Header />
+    <AdminLayout
+      activeTab={activeTab}
+      cinemas={cinemas}
+      selectedCinemaId={selectedCinemaId}
+      onSelectCinema={setSelectedCinemaId}
+      user={user}
+      isDbConnected={isDbConnected}
+      useSharedFooter={useSharedFooter}
+      onNavigate={onNavigate}
+    >
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#0F172A]">
+            Showtime timeline
+          </h1>
+          <p className="mt-1 text-xs font-normal text-[#475569]">
+            Schedule screenings by screen, manage timing and 15-minute cleaning buffers.
+          </p>
+        </div>
 
-      <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col lg:flex-row">
-        <aside className="flex w-full shrink-0 flex-col justify-between border-b border-[#E2E8F0] bg-white p-4 lg:w-[210px] lg:border-b-0 lg:border-r lg:px-4 lg:py-6">
-          <div className="flex flex-col gap-6">
-            <div className="rounded-xl border border-[#F1F5F9] bg-[#F8FAFC] p-3.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
-                MANAGED CINEMA
-              </div>
-              <div className="mt-1 text-xs font-extrabold text-[#0F172A]">
-                {managedCinemaName}
-              </div>
-              <div className="mt-0.5 text-[11px] text-[#64748B]">
-                {managedCinemaLocation}
-              </div>
-            </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={openCopyModal}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3.5 text-xs font-bold text-[#0F172A] hover:bg-[#F8FAFC]"
+          >
+            <Copy className="h-3.5 w-3.5 text-[#475569]" />
+            <span>Copy day</span>
+          </button>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#DC2626] px-4 text-xs font-bold text-white shadow-sm hover:bg-[#B91C1C]"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add screening</span>
+          </button>
+        </div>
+      </div>
 
-            <nav className="flex flex-col gap-1" aria-label="Admin sidebar navigation">
-              {PRIMARY_NAV_ITEMS.map((item) => (
-                <SidebarNavItem
-                  key={item.id}
-                  item={item}
-                  isActive={item.id === activeTab}
-                  onSelect={handleNavClick}
-                />
-              ))}
+      {error && (
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-xs font-semibold text-[#B91C1C]">
+          {error}
+        </div>
+      )}
 
-              <div className="my-3 border-t border-[#F1F5F9]" />
+      {feedback && (
+        <div className="rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-xs font-semibold text-[#065F46]">
+          {feedback}
+        </div>
+      )}
 
-              <SidebarNavItem
-                item={{ id: 'settings', label: 'System settings', icon: Settings }}
-                isActive={activeTab === 'settings'}
-                onSelect={handleNavClick}
-              />
-            </nav>
-          </div>
-
-          <div className="mt-6 rounded-xl border border-[#E2E8F0]/60 bg-[#F0FDF4]/60 p-3.5 lg:mt-0">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#10B981]" />
-              <span className="text-[11px] font-bold text-[#065F46]">
-                All systems operational
-              </span>
-            </div>
-            <div className="mt-1 text-[10px] font-medium text-[#64748B]">
-              Synced at 17:25
-            </div>
-          </div>
-        </aside>
-
-        <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6 lg:p-8">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-[#0F172A]">
-                Showtime timeline
-              </h1>
-              <p className="mt-1 text-xs font-normal text-[#475569]">
-                Schedule screenings by screen, manage timing and breaks.
-              </p>
-            </div>
-
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex h-9 items-center rounded-lg border border-[#E2E8F0] bg-white">
             <button
               type="button"
-              className="inline-flex h-9 items-center justify-center gap-1.5 self-start rounded-lg bg-[#DC2626] px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#B91C1C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626] focus-visible:ring-offset-2 active:scale-[0.99] sm:self-auto"
+              aria-label="Previous day"
+              onClick={() => setSelectedDate((d) => addDaysToIso(d, -1))}
+              className="flex h-full w-9 items-center justify-center rounded-l-lg border-r border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
             >
-              <Plus className="h-4 w-4" />
-              <span>Add screening</span>
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <input
+              type="date"
+              aria-label="Schedule date"
+              value={selectedDate}
+              onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+              className="h-full px-3 text-xs font-medium text-[#0F172A] focus:outline-none"
+            />
+            <button
+              type="button"
+              aria-label="Next day"
+              onClick={() => setSelectedDate((d) => addDaysToIso(d, 1))}
+              className="flex h-full w-9 items-center justify-center rounded-r-lg border-l border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
+            >
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <div className="flex items-center rounded-lg border border-[#E2E8F0] bg-white h-9">
-                <button className="flex h-full w-9 items-center justify-center text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] border-r border-[#E2E8F0] rounded-l-lg transition-colors">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <div className="flex h-full items-center gap-2 px-3 text-xs font-medium text-[#0F172A]">
-                  <span>Tuesday, 13/10/2026</span>
-                  <Calendar className="h-3.5 w-3.5 text-[#64748B]" />
-                </div>
-                <button className="flex h-full w-9 items-center justify-center text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] border-l border-[#E2E8F0] rounded-r-lg transition-colors">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="relative inline-flex items-center">
-                <select
-                  value={selectedScreen}
-                  onChange={(e) => setSelectedScreen(e.target.value)}
-                  className="h-9 appearance-none rounded-lg border border-[#E2E8F0] bg-white pr-9 pl-3 text-xs font-medium text-[#0F172A] transition-colors hover:border-[#CBD5E1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20"
-                >
-                  <option value="All screens">All screens</option>
-                  <option value="Screen 01">Screen 01</option>
-                  <option value="Screen 02">Screen 02</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-[#64748B]" />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 text-xs font-bold">
-              <button
-                onClick={() => setViewMode('Daily')}
-                className={`transition-colors ${viewMode === 'Daily' ? 'text-[#DC2626]' : 'text-[#475569] hover:text-[#0F172A]'}`}
-              >
-                Daily
-              </button>
-              <button
-                onClick={() => setViewMode('Weekly')}
-                className={`transition-colors ${viewMode === 'Weekly' ? 'text-[#DC2626]' : 'text-[#475569] hover:text-[#0F172A]'}`}
-              >
-                Weekly
-              </button>
-            </div>
+          <div className="relative inline-flex items-center">
+            <select
+              aria-label="Filter by screen"
+              value={selectedRoomId}
+              onChange={(e) => setSelectedRoomId(e.target.value)}
+              className="h-9 appearance-none rounded-lg border border-[#E2E8F0] bg-white pr-9 pl-3 text-xs font-medium text-[#0F172A]"
+            >
+              <option value="ALL">All screens</option>
+              {rooms.map((room) => (
+                <option key={room.RoomID} value={String(room.RoomID)}>
+                  {room.RoomNumber}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-[#64748B]" />
           </div>
+        </div>
 
-          <section className="flex flex-col rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_3px_rgb(15,23,42,0.02)] overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-4 p-5 border-b border-[#E2E8F0]">
-              <h2 className="text-sm font-bold text-[#0F172A]">Today's schedule</h2>
-              
-              <div className="flex items-center gap-5 text-[11px] font-semibold text-[#64748B]">
-                <div className="flex items-center gap-1.5"><span className="text-[#0F172A]">Completed</span></div>
-                <div className="flex items-center gap-1.5"><span className="text-[#D97706]">Scheduled</span></div>
-                <div className="flex items-center gap-1.5"><span className="text-[#DC2626]">Selected</span></div>
-                <span className="ml-2 font-normal">Minimum break: 20 min · Drag screenings to reschedule</span>
+        <span className="text-xs font-medium text-[#64748B]">
+          {loading
+            ? 'Loading schedule...'
+            : `${showtimes.length} screenings · ${visibleRooms.length} screens`}
+        </span>
+      </div>
+
+      <section className="flex flex-col overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_3px_rgb(15,23,42,0.02)]">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] p-5">
+          <h2 className="text-sm font-bold text-[#0F172A]">
+            Schedule for {selectedDate}
+          </h2>
+
+          <div className="flex items-center gap-5 text-[11px] font-semibold text-[#64748B]">
+            <span className="text-[#059669]">CHECKIN_OPEN</span>
+            <span className="text-[#D97706]">SCHEDULED</span>
+            <span className="text-[#475569]">COMPLETED</span>
+            <span className="text-[#DC2626]">Selected</span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <div className="relative min-w-[960px] select-none">
+            <div className="flex border-b border-[#E2E8F0] bg-[#F8FAFC]">
+              <div className="flex w-[140px] shrink-0 flex-col justify-end p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                  Screen
+                </span>
               </div>
-
-              <span className="text-xs font-medium text-[#64748B]">16 screenings · 4 screens · No conflicts</span>
+              <div className="relative h-11 flex-1">
+                {TIME_LABELS.map((label, index) => {
+                  const leftPos = (index / (TIME_LABELS.length - 1)) * 100;
+                  return (
+                    <div
+                      key={label}
+                      className="absolute bottom-2.5 -translate-x-1/2"
+                      style={{ left: `${leftPos}%` }}
+                    >
+                      <span className="text-[10px] font-medium text-[#64748B]">
+                        {label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <div className="min-w-[1000px] relative select-none">
-                
-                <div className="flex border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                  <div className="w-[120px] shrink-0 p-3 flex flex-col justify-end">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Screen</span>
-                  </div>
-                  <div className="relative flex-1 h-12">
-                    {TIME_LABELS.map((label, index) => {
-                      const leftPos = (index / (TIME_LABELS.length - 1)) * 100;
-                      return (
-                        <div key={label} className="absolute bottom-3 -translate-x-1/2 flex flex-col items-center gap-1" style={{ left: `${leftPos}%` }}>
-                          <span className="text-[10px] font-medium text-[#64748B]">{label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-0 flex">
+                <div className="w-[140px] shrink-0" />
+                <div className="relative flex-1">
+                  {TIME_LABELS.map((label, index) => {
+                    const leftPos = (index / (TIME_LABELS.length - 1)) * 100;
+                    return (
+                      <div
+                        key={`grid-${label}`}
+                        className="absolute top-0 bottom-0 border-l border-dashed border-[#E2E8F0]"
+                        style={{ left: `${leftPos}%` }}
+                      />
+                    );
+                  })}
                 </div>
+              </div>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex pointer-events-none">
-                    <div className="w-[120px] shrink-0"></div>
-                    <div className="relative flex-1">
-                      {TIME_LABELS.map((label, index) => {
-                        const leftPos = (index / (TIME_LABELS.length - 1)) * 100;
-                        return <div key={`grid-${label}`} className="absolute top-0 bottom-0 border-l border-dashed border-[#E2E8F0]" style={{ left: `${leftPos}%` }} />;
+              {visibleRooms.map((room) => {
+                const roomBlocks = showtimes.filter(
+                  (s) => s.RoomID === room.RoomID
+                );
+                return (
+                  <div
+                    key={room.RoomID}
+                    className="flex border-b border-[#E2E8F0] transition-colors last:border-b-0 hover:bg-[#F8FAFC]/50"
+                  >
+                    <div className="z-10 flex w-[140px] shrink-0 flex-col justify-center border-r border-[#E2E8F0] bg-white p-4">
+                      <span className="text-xs font-bold text-[#0F172A]">
+                        {room.RoomNumber}
+                      </span>
+                      <span className="mt-0.5 text-[10px] text-[#64748B]">
+                        {room.Capacity} seats · {room.RoomType}
+                      </span>
+                    </div>
+                    <div className="relative h-[88px] flex-1 py-3">
+                      {roomBlocks.map((block) => {
+                        const isSelected =
+                          selectedShowtime?.ShowtimeID === block.ShowtimeID;
+                        const { leftPercent, widthPercent } = calcBlockPosition(
+                          block.StartTime,
+                          block.EndTime
+                        );
+
+                        let blockStyles =
+                          'bg-[#FFFBEB] border-[#FDE68A] hover:border-[#FCD34D]';
+                        let titleStyles = 'text-[#0F172A]';
+                        let subStyles = 'text-[#64748B]';
+
+                        if (isSelected) {
+                          blockStyles =
+                            'bg-[#FEF2F2] border-[#DC2626] shadow-sm z-10';
+                          titleStyles = 'text-[#DC2626]';
+                          subStyles = 'text-[#DC2626]';
+                        } else if (block.Status === 'CHECKIN_OPEN') {
+                          blockStyles = 'bg-[#ECFDF5] border-[#A7F3D0]';
+                          titleStyles = 'text-[#065F46]';
+                          subStyles = 'text-[#059669]';
+                        } else if (
+                          block.Status === 'COMPLETED' ||
+                          block.Status === 'CANCELED'
+                        ) {
+                          blockStyles = 'bg-[#F8FAFC] border-[#E2E8F0] opacity-75';
+                          titleStyles = 'text-[#475569]';
+                          subStyles = 'text-[#94A3B8]';
+                        }
+
+                        return (
+                          <button
+                            key={block.ShowtimeID}
+                            type="button"
+                            onClick={() => setSelectedShowtimeId(block.ShowtimeID)}
+                            style={{
+                              left: `${leftPercent}%`,
+                              width: `${widthPercent}%`,
+                            }}
+                            className={`absolute top-3 bottom-3 flex cursor-pointer flex-col overflow-hidden rounded-md border p-2 text-left transition-all ${blockStyles}`}
+                          >
+                            <span className={`truncate text-[10px] font-bold ${titleStyles}`}>
+                              {block.MovieTitle}
+                            </span>
+                            <span className={`mt-0.5 text-[9px] ${subStyles}`}>
+                              {block.StartTime.slice(0, 5)}–{block.EndTime.slice(0, 5)}
+                            </span>
+                            <span
+                              className={`mt-auto truncate text-[9px] font-semibold ${subStyles}`}
+                            >
+                              {block.Status}
+                            </span>
+                          </button>
+                        );
                       })}
                     </div>
                   </div>
-
-                  <div className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `calc(120px + ${CURRENT_TIME_PERCENT}% - 24px)` }}>
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded bg-[#DC2626] px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                      17:25
-                    </div>
-                    <div className="absolute top-1 bottom-0 left-1/2 w-0.5 -translate-x-1/2 bg-[#DC2626]" />
-                  </div>
-
-                  {TIMELINE_DATA.map((row) => (
-                    <div key={row.id} className="flex border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F8FAFC]/50 transition-colors">
-                      <div className="w-[120px] shrink-0 p-4 border-r border-[#E2E8F0] bg-white z-10 flex flex-col justify-center">
-                        <span className="text-xs font-bold text-[#0F172A]">{row.name}</span>
-                        <span className="text-[10px] text-[#64748B] mt-0.5">{row.seats} seats · {row.format}</span>
-                      </div>
-                      <div className="relative flex-1 h-[88px] py-3">
-                        {row.blocks.map((block) => {
-                          const isCompleted = block.status === 'completed';
-                          const isSelected = block.status === 'selected';
-                          
-                          let blockStyles = '';
-                          let textStyles = '';
-                          let subTextStyles = '';
-
-                          if (isSelected) {
-                            blockStyles = 'bg-[#FEF2F2] border-[#DC2626] shadow-sm z-10 scale-[1.02]';
-                            textStyles = 'text-[#DC2626]';
-                            subTextStyles = 'text-[#DC2626]';
-                          } else if (isCompleted) {
-                            blockStyles = 'bg-[#F8FAFC] border-[#E2E8F0] opacity-80';
-                            textStyles = 'text-[#475569]';
-                            subTextStyles = 'text-[#94A3B8]';
-                          } else {
-                            blockStyles = 'bg-[#FFFBEB] border-[#FDE68A] hover:border-[#FCD34D] cursor-pointer';
-                            textStyles = 'text-[#0F172A]';
-                            subTextStyles = 'text-[#64748B]';
-                          }
-
-                          return (
-                            <div
-                              key={block.id}
-                              className={`absolute h-full rounded-md border p-2 flex flex-col overflow-hidden transition-all ${blockStyles}`}
-                              style={{ left: `${block.leftPercent}%`, width: `${block.widthPercent}%` }}
-                            >
-                              <span className={`text-[10px] font-bold truncate ${textStyles}`}>{block.title}</span>
-                              <span className={`text-[9px] mt-0.5 ${subTextStyles}`}>{block.timeRange}</span>
-                              <span className={`text-[9px] mt-auto font-medium truncate ${subTextStyles}`}>{block.subtitle}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                );
+              })}
             </div>
-          </section>
+          </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            
-            <DashboardCard className="lg:col-span-7 flex flex-col">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <DashboardCard className="flex flex-col lg:col-span-7">
+          {selectedShowtime ? (
+            <>
               <div className="flex items-start justify-between gap-4">
-                <h2 className="text-lg font-extrabold text-[#0F172A]">Dune: Hành tinh cát 2</h2>
-                <span className="text-[11px] font-medium text-[#64748B]">Selected screening</span>
+                <h2 className="text-lg font-extrabold text-[#0F172A]">
+                  {selectedShowtime.MovieTitle}
+                </h2>
+                <span className="text-[11px] font-bold text-[#DC2626]">
+                  #{selectedShowtime.ShowtimeID} · {selectedShowtime.Status}
+                </span>
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-6 border-b border-[#F1F5F9] pb-6">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Screen 01 · 13/10/2026</span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-black tracking-tight text-[#0F172A]">17:45</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                    {selectedShowtime.RoomNumber} · {selectedShowtime.ShowDate}
+                  </span>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span className="text-2xl font-black tracking-tight text-[#0F172A]">
+                      {selectedShowtime.StartTime.slice(0, 5)}
+                    </span>
                     <span className="text-sm font-bold text-[#64748B]">→</span>
-                    <span className="text-2xl font-black tracking-tight text-[#0F172A]">20:31</span>
+                    <span className="text-2xl font-black tracking-tight text-[#0F172A]">
+                      {selectedShowtime.EndTime.slice(0, 5)}
+                    </span>
                   </div>
-                  <span className="text-[11px] font-medium text-[#64748B] mt-1">166 min · 2D · Vietnamese subs · C13</span>
+                  <span className="mt-1 text-[11px] font-medium text-[#64748B]">
+                    {selectedShowtime.MovieDuration} min + 15m cleaning ·{' '}
+                    {selectedShowtime.Format}
+                  </span>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Sold / Capacity</span>
-                  <div className="flex items-baseline gap-1 mt-1">
-                    <span className="text-2xl font-black tracking-tight text-[#0F172A]">82</span>
-                    <span className="text-base font-bold text-[#475569]">/ 104 tickets</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                    Base Ticket Price
+                  </span>
+                  <div className="mt-1 text-2xl font-black tracking-tight text-[#0F172A]">
+                    {new Intl.NumberFormat('vi-VN').format(
+                      Number(selectedShowtime.BaseTicketPrice)
+                    )}{' '}
+                    ₫
                   </div>
-                  <span className="text-[11px] font-bold text-[#059669] mt-1">78.8% occupancy</span>
+                  <span className="mt-1 text-[11px] font-medium text-[#64748B]">
+                    Cinema: {selectedShowtime.CinemaName}
+                  </span>
                 </div>
               </div>
 
               <div className="mt-5 flex flex-wrap gap-3">
-                <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-[#DC2626] px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#B91C1C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626] active:scale-[0.99]">
+                <button
+                  type="button"
+                  onClick={() => openEditModal(selectedShowtime)}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-[#DC2626] px-4 text-xs font-bold text-white shadow-sm hover:bg-[#B91C1C]"
+                >
                   <Pencil className="h-3.5 w-3.5" />
                   <span>Edit screening</span>
                 </button>
-                <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 text-xs font-bold text-[#0F172A] shadow-sm transition-all hover:bg-[#F8FAFC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20 active:scale-[0.99]">
+                <button
+                  type="button"
+                  onClick={openCopyModal}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 text-xs font-bold text-[#0F172A] hover:bg-[#F8FAFC]"
+                >
                   <Copy className="h-3.5 w-3.5 text-[#475569]" />
-                  <span>Duplicate</span>
+                  <span>Copy day</span>
                 </button>
-                <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 text-xs font-bold text-[#0F172A] shadow-sm transition-all hover:bg-[#FEF2F2] hover:text-[#DC2626] hover:border-[#FCA5A5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/20 active:scale-[0.99]">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteShowtime(selectedShowtime)}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 text-xs font-bold text-[#0F172A] hover:border-[#FCA5A5] hover:bg-[#FEF2F2] hover:text-[#DC2626]"
+                >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span>Cancel screening</span>
+                  <span>Delete screening</span>
                 </button>
               </div>
-            </DashboardCard>
+            </>
+          ) : (
+            <div className="py-10 text-center text-xs text-[#94A3B8]">
+              Select a screening block on the timeline or click "Add screening".
+            </div>
+          )}
+        </DashboardCard>
 
-            <DashboardCard className="lg:col-span-5 flex flex-col">
-              <h2 className="text-sm font-bold text-[#0F172A]">Schedule check</h2>
-              
-              <div className="mt-5 flex flex-col gap-4">
-                <span className="text-[11px] font-bold text-[#059669]">No conflicts</span>
-                <p className="text-xs font-medium text-[#475569] leading-relaxed">
-                  The next screening starts at 20:51, allowing 20 minutes for cleaning and setup.
-                </p>
-                <p className="text-xs font-medium text-[#D97706] leading-relaxed">
-                  Changes to screenings with sold tickets require confirmation.
-                </p>
-              </div>
-            </DashboardCard>
-
+        <DashboardCard className="flex flex-col lg:col-span-5">
+          <h2 className="text-sm font-bold text-[#0F172A]">Scheduling rules</h2>
+          <div className="mt-4 flex flex-col gap-3 text-xs leading-relaxed text-[#475569]">
+            <p>
+              <strong className="text-[#059669]">Auto buffer:</strong> End time is
+              automatically calculated as{' '}
+              <code className="rounded bg-[#F1F5F9] px-1 py-0.5">
+                StartTime + Duration + 15 min
+              </code>
+              .
+            </p>
+            <p>
+              <strong className="text-[#DC2626]">Overlap protection:</strong>{' '}
+              Overlapping schedules in the same screen are rejected with HTTP 409.
+            </p>
+            <p>
+              <strong className="text-[#D97706]">Paid ticket lock:</strong>{' '}
+              Screenings with paid tickets cannot be edited or deleted (HTTP 400).
+            </p>
           </div>
-        </main>
+        </DashboardCard>
       </div>
 
-      {useSharedFooter ? (
-        <Footer />
-      ) : (
-        <footer className="w-full border-t border-[#E2E8F0] bg-white px-6 py-3.5 text-[11px] font-medium text-[#64748B]">
-          <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-2 sm:flex-row">
-            <span>SENEMA · Cinema dashboard</span>
-            <span>Tuesday, 13/10/2026 · Afternoon shift 14:00–22:00</span>
+      {modalMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3">
+              <h3 className="text-base font-extrabold text-[#0F172A]">
+                {modalMode === 'create' ? 'Add screening' : 'Edit screening'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalMode(null)}
+                className="rounded p-1 text-[#64748B] hover:bg-[#F1F5F9]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveShowtime} className="mt-4 flex flex-col gap-3">
+              {formError && (
+                <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-semibold text-[#B91C1C]">
+                  {formError}
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                  Movie
+                </label>
+                <select
+                  required
+                  value={formMovieId}
+                  onChange={(e) => setFormMovieId(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                >
+                  {movies.map((m) => (
+                    <option key={m.MovieID} value={String(m.MovieID)}>
+                      {m.Title} ({m.Duration}m)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                  Screen
+                </label>
+                <select
+                  required
+                  value={formRoomId}
+                  onChange={(e) => setFormRoomId(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                >
+                  {rooms.map((r) => (
+                    <option key={r.RoomID} value={String(r.RoomID)}>
+                      {r.RoomNumber} ({r.RoomType})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                    Show date
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)}
+                    className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                    Start time
+                  </label>
+                  <input
+                    required
+                    type="time"
+                    value={formStartTime}
+                    onChange={(e) => setFormStartTime(e.target.value)}
+                    className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                    Base price (VND)
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={formPrice}
+                    onChange={(e) => setFormPrice(e.target.value)}
+                    className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                    Status
+                  </label>
+                  <select
+                    value={formStatus}
+                    onChange={(e) =>
+                      setFormStatus(e.target.value as Showtime['Status'])
+                    }
+                    className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                  >
+                    <option value="SCHEDULED">SCHEDULED</option>
+                    <option value="CHECKIN_OPEN">CHECKIN_OPEN</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="CANCELED">CANCELED</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                  Format
+                </label>
+                <input
+                  value={formFormat}
+                  onChange={(e) => setFormFormat(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                />
+              </div>
+
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalMode(null)}
+                  className="h-9 rounded-lg border border-[#E2E8F0] px-4 text-xs font-bold text-[#475569]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="h-9 rounded-lg bg-[#DC2626] px-4 text-xs font-bold text-white hover:bg-[#B91C1C] disabled:opacity-60"
+                >
+                  {submitting ? 'Saving...' : 'Save screening'}
+                </button>
+              </div>
+            </form>
           </div>
-        </footer>
+        </div>
       )}
-    </div>
+
+      {copyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3">
+              <h3 className="text-base font-extrabold text-[#0F172A]">
+                Copy showtime schedule
+              </h3>
+              <button
+                type="button"
+                onClick={() => setCopyOpen(false)}
+                className="rounded p-1 text-[#64748B] hover:bg-[#F1F5F9]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCopySubmit} className="mt-4 flex flex-col gap-3">
+              {copyError && (
+                <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-semibold text-[#B91C1C]">
+                  {copyError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                    Source date
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={copySourceDate}
+                    onChange={(e) => setCopySourceDate(e.target.value)}
+                    className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                    Target date
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={copyTargetDate}
+                    onChange={(e) => setCopyTargetDate(e.target.value)}
+                    className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-bold text-[#0F172A]">
+                  Screen scope
+                </label>
+                <select
+                  value={copyRoomId}
+                  onChange={(e) => setCopyRoomId(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-xs"
+                >
+                  <option value="ALL">All screens in cinema</option>
+                  {rooms.map((r) => (
+                    <option key={r.RoomID} value={String(r.RoomID)}>
+                      {r.RoomNumber} only
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCopyOpen(false)}
+                  className="h-9 rounded-lg border border-[#E2E8F0] px-4 text-xs font-bold text-[#475569]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="h-9 rounded-lg bg-[#DC2626] px-4 text-xs font-bold text-white hover:bg-[#B91C1C] disabled:opacity-60"
+                >
+                  {submitting ? 'Copying...' : 'Copy showtimes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </AdminLayout>
   );
 }
