@@ -6,7 +6,7 @@ import {
   Store, Tag, Utensils, X,
 } from "lucide-react";
 import { useBooking } from "../context/useBooking";
-import { SeatType } from "../components/seatComponents/Seat";
+import type { SeatType } from "../components/seatComponents/Seat";
 import { Price } from "../data/Price";
 import { Navigate, useNavigate } from "react-router-dom";
 import food1 from "../assets/food1.jpg";

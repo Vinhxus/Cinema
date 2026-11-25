@@ -1,5 +1,5 @@
 import {createContext, useContext} from 'react'
-import { BookingContextValue } from './Booking'
+import type { BookingContextValue } from './Booking'
 
 export const BookingContext = createContext<BookingContextValue | null>(null)
 

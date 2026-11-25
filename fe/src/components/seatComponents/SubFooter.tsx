@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Heart, Check, X } from 'lucide-react'
-import { Seat, SeatType, SeatStatus } from './Seat'
+import { Seat, type SeatType, type SeatStatus } from './Seat'
 
 interface LegendItemProps {
   title: string

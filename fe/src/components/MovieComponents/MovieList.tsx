@@ -1,69 +1,58 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MovieCard, type Movie } from "./MovieCard";
-import Dune from "../../assets/dune.png";
-import Kong from "../../assets/kong.jpg";
-import Exhuma from "../../assets/exhuma.jpg";
-import Panda from "../../assets/panda.jpg";
-import Mai from "../../assets/Mai.jpg";
-import Oppenheimer from "../../assets/oppenheimer.jpg";
-import Conan from "../../assets/conan.jpg";
-import Furiosa from "../../assets/furiosa.jpg";
-import Deadpool from "../../assets/deadpool.jpg";
-import InsideOut2 from "../../assets/insideout2.jpg";
+import { fetchMovies } from "../../services/discoveryApi";
 
 /* ---------- Types ---------- */
 type TabKey = "now" | "upcoming";
 
-interface TabItem {
-  key: TabKey;
-  label: string;
-  count: number;
-}
+const ALL_GENRES = "All Genres";
+const SKELETON_COUNT = 10;
 
-/* ---------- Mock data ---------- */
-const NOW_SHOWING_COUNT = 18;
-
-const UPCOMING: Movie[] = [
-  { id: 1, title: "Dune: Hành Tinh Cát 2", subtitle: "Dune: Part Two", age: "C18", tags: ["IMAX"], genre: "Khoa học viễn tưởng", formats: "2D • IMAX", rating: 8.9, poster: Dune },
-  { id: 2, title: "Godzilla x Kong", subtitle: "The New Empire", age: "C13", tags: ["4DX"], genre: "Hành động, Quái thú", formats: "3D • 4DX", rating: 8.4, poster: Kong },
-  { id: 3, title: "Exhuma: Quật Mộ Trùng Ma", subtitle: "Pamyo (2024)", age: "C18", tags: ["2D"], genre: "Kinh dị, Huyền bí", formats: "2D Lồng tiếng", rating: 8.7, poster: Exhuma },
-  { id: 4, title: "Kung Fu Panda 4", subtitle: "DreamWorks Animation", age: "P", tags: ["3D"], genre: "Hoạt hình, Hài hước", formats: "2D • 3D", rating: 8.2, poster: Panda },
-  { id: 5, title: "Mai (Phim Trấn Thành)", subtitle: "A Film by Tran Thanh", age: "C18", tags: ["2D"], genre: "Tâm lý, Tình cảm", formats: "2D Kỹ thuật số", rating: 8.1, poster: Mai },
-  { id: 6, title: "Oppenheimer (Tái chiếu)", subtitle: "Christopher Nolan Film", age: "C18", tags: ["IMAX 70MM"], genre: "Tiểu sử, Lịch sử", formats: "IMAX GT Laser", rating: 9.1, poster: Oppenheimer },
-  { id: 7, title: "Thám Tử Lừng Danh Conan", subtitle: "Ngôi Sao 5 Cánh 1 Triệu Đô", age: "P", tags: ["2D"], genre: "Anime, Trinh thám", formats: "2D • 4DX", rating: 8.8, poster: Conan },
-  { id: 8, title: "Furiosa: Câu Chuyện Mad Max", subtitle: "A Mad Max Saga", age: "C18", tags: ["IMAX"], genre: "Hành động, Hậu tận thế", formats: "IMAX • ScreenX", rating: 8.5, poster: Furiosa },
-  { id: 9, title: "Deadpool & Wolverine", subtitle: "Marvel Studios", age: "C18", tags: ["2D"], genre: "Hành động, Siêu anh hùng", formats: "3D • 4DX", rating: 8.8, poster: Deadpool },
-  { id: 10, title: "Những Mảnh Ghép Cảm Xúc 2", subtitle: "Disney Pixar Inside Out 2", age: "P", tags: ["2D"], genre: "Hoạt hình, Gia đình", formats: "2D Lồng tiếng", rating: 8.9, poster: InsideOut2 },
-];
-
-const GENRES: string[] = [
-  "All Genres",
-  "Action",
-  "Science Fiction",
-  "Horror / Mystery",
-  "Animation / Anime",
-  "Psychological / Romantic",
-  "IMAX 3D",
-];
+const TAB_LABEL: Record<TabKey, string> = {
+  now: "Now showing",
+  upcoming: "Upcoming",
+};
 
 export default function MovieList() {
-  const [tab, setTab] = useState<TabKey>("upcoming");
-  const [genre, setGenre] = useState<string>(GENRES[0]);
+  const [tab, setTab] = useState<TabKey>("now");
+  const [genre, setGenre] = useState<string>(ALL_GENRES);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [genres, setGenres] = useState<string[]>([ALL_GENRES]);
+  const [counts, setCounts] = useState({ nowShowing: 0, comingSoon: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const movies = useMemo<Movie[]>(() => {
-    if (genre === GENRES[0]) return UPCOMING;
+  // Tải danh sách phim thật từ API mỗi khi đổi tab hoặc thể loại.
+  useEffect(() => {
+    let cancelled = false;
 
-    if (genre === "Định dạng IMAX 3D") {
-      return UPCOMING.filter((m) => /imax|3d/i.test(m.formats));
-    }
+    setLoading(true);
+    setError(null);
 
-    const keyword = genre.split(/[/-]/)[0].trim().toLowerCase();
-    return UPCOMING.filter((m) => m.genre.toLowerCase().includes(keyword));
-  }, [genre]);
+    fetchMovies({ status: tab, genre: genre === ALL_GENRES ? undefined : genre })
+      .then((data) => {
+        if (cancelled) return;
+        setMovies(data.items);
+        setGenres([ALL_GENRES, ...data.genres]);
+        setCounts(data.counts);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setMovies([]);
+        setError(err instanceof Error ? err.message : "Không tải được danh sách phim.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-  const tabs: TabItem[] = [
-    { key: "now", label: "Now showing", count: NOW_SHOWING_COUNT },
-    { key: "upcoming", label: "Upcoming", count: UPCOMING.length + 2 },
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, genre]);
+
+  const tabs = [
+    { key: "now" as TabKey, label: TAB_LABEL.now, count: counts.nowShowing },
+    { key: "upcoming" as TabKey, label: TAB_LABEL.upcoming, count: counts.comingSoon },
   ];
 
   return (
@@ -74,7 +63,7 @@ export default function MovieList() {
         Discovery
       </div>
 
-      {/* Tabs + thời gian cập nhật */}
+      {/* Tabs + nguồn dữ liệu */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-6">
           {tabs.map((t) => {
@@ -84,7 +73,7 @@ export default function MovieList() {
                 key={t.key}
                 type="button"
                 onClick={() => setTab(t.key)}
-                className={`relative flex items-center gap-2 pb-2 text-xl font-bold transition-colors ${
+                className={`relative flex cursor-pointer items-center gap-2 pb-2 text-xl font-bold transition-colors ${
                   active ? "text-slate-900" : "text-slate-400 hover:text-slate-600"
                 }`}
               >
@@ -106,21 +95,20 @@ export default function MovieList() {
 
         <div className="mb-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
           <span className="text-amber-500">⟳</span>
-          Cập nhật lịch chiếu:{" "}
-          <b className="text-slate-700">15 phút trước</b>
+          Nguồn: <b className="text-slate-700">SENEMA API</b>
         </div>
       </div>
 
-      {/* Bộ lọc thể loại */}
+      {/* Bộ lọc thể loại (lấy từ dữ liệu thật) */}
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-none [&::-webkit-scrollbar]:hidden">
-        {GENRES.map((g) => {
+        {genres.map((g) => {
           const active = genre === g;
           return (
             <button
               key={g}
               type="button"
               onClick={() => setGenre(g)}
-              className={`shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition ${
+              className={`shrink-0 cursor-pointer rounded-full border px-4 py-1.5 text-xs font-medium transition ${
                 active
                   ? "border-amber-500 bg-amber-500 text-white"
                   : "border-slate-200 bg-white text-slate-600 hover:border-amber-400 hover:text-amber-600"
@@ -133,16 +121,36 @@ export default function MovieList() {
       </div>
 
       {/* GRID danh sách phim */}
-      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {movies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+            <div
+              key={index}
+              className="aspect-3/4 animate-pulse rounded-xl border border-slate-200 bg-slate-100"
+            />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-10 text-center">
+          <p className="text-sm font-semibold text-red-600">{error}</p>
+          <p className="mt-1 text-xs text-red-500">
+            Kiểm tra Backend đang chạy tại http://localhost:5000 rồi tải lại trang.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {movies.map((movie) => (
+              <MovieCard key={movie.id} movie={movie} />
+            ))}
+          </div>
 
-      {movies.length === 0 && (
-        <p className="py-16 text-center text-sm text-slate-400">
-          Chưa có phim nào thuộc thể loại này.
-        </p>
+          {movies.length === 0 && (
+            <p className="py-16 text-center text-sm text-slate-400">
+              Chưa có phim nào thuộc thể loại này.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
