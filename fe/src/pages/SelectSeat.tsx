@@ -13,6 +13,7 @@ import type { SeatStatus, SeatType } from '../components/seatComponents/Seat'
 import { ShowtimePicker } from '../components/seatComponents/ShowtimePicker'
 import type { Movie, AgeRating } from '../components/MovieComponents/MovieCard'
 import { useBooking } from '../context/useBooking'
+import type { ShowtimeInfo } from '../context/Booking'
 import { useSeatSocket } from '../hooks/useSeatSocket'
 import { useCountdown } from '../hooks/useCountdown'
 import { fetchSeatMap, type SeatMapResponse, type SeatMapShowtime } from '../api/showtimes'
@@ -63,10 +64,13 @@ const MESSAGES: Partial<Record<HoldFailReason, string>> = {
 const toAge = (r: SeatMapShowtime['movie']['ageRating']): AgeRating =>
   r === 'P' ? 'P' : (r.replace('T', 'C') as AgeRating)
 
-function toShowtimeInfo(st: SeatMapShowtime) {
+function toShowtimeInfo(st: SeatMapShowtime): ShowtimeInfo {
   const start = new Date(st.startsAt)
   return {
     id: st.id,
+    showtimeId: Number(st.id),
+    // en-CA cho ra dạng YYYY-MM-DD
+    dateISO: start.toLocaleDateString('en-CA', { timeZone: TZ }),
     time: start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: TZ }),
     date: start.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', timeZone: TZ }),
     cinemaName: st.cinemaName,

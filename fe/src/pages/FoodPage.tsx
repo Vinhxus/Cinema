@@ -7,7 +7,9 @@ import {
 } from "lucide-react";
 import { useBooking } from "../context/useBooking";
 import type { SeatType } from "../components/seatComponents/Seat";
-import { Price } from "../data/Price";
+import { COMBOS, type Category, type Combo } from "../data/combos";
+import { vnd } from "../utils/currency";
+import { useCountdown } from "../hooks/useCountdown";
 import { Navigate, useNavigate } from "react-router-dom";
 import dune from "../assets/dune.png";
 
