@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { testConnection } from '../config/db.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import movieRoutes from './movie.routes.js';
+import cinemaRoutes from './cinema.routes.js';
+import showtimeRoutes from './showtime.routes.js';
 //import authRoutes from './auth.routes.js';
 
 const router = Router();
@@ -22,8 +24,9 @@ router.get('/health', async (req, res) => {
 });
 
 router.use('/movies', movieRoutes);
+router.use('/cinemas', cinemaRoutes);
+router.use('/showtimes', showtimeRoutes);
 
 //router.use('/auth', authRoutes);
 
 export default router;
-
