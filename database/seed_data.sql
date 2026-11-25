@@ -39,12 +39,12 @@ INSERT INTO seat_types (SeatTypeID, TypeCode, TypeName, BasePrice, Surcharge, Se
 -- 2. USERS (Mật khẩu mẫu đều là: Password@123)
 -- ============================================================================
 INSERT INTO users (UserID, name, phone_number, mail, hashed_password, UserType, cine_points, tier, birthdate) VALUES
-(1, 'System Admin', '0900000001', 'admin@senema.vn', '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', 'ADMIN', 0, 'VIP', '1995-05-15'),
-(2, 'Nguyễn Minh (Staff Q1)', '0900000002', 'minh.staff@senema.vn', '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', 'STAFF', 0, 'STANDARD', '2000-08-20'),
-(3, 'Lê Hoàng Nam (Staff LM81)', '0900000003', 'nam.staff@senema.vn', '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', 'STAFF', 0, 'STANDARD', '2001-02-10'),
-(4, 'Alex Nguyen', '0912345678', 'alex.nguyen@example.com', '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', 'CUSTOMER', 320, 'GOLD', '2003-09-12'),
-(5, 'Trần Anh Thư', '0901234568', 'thu.tran@example.com', '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', 'CUSTOMER', 150, 'SILVER', '2004-11-25'),
-(6, 'Phạm Gia Bảo', '0987654321', 'bao.pham@example.com', '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', 'CUSTOMER', 50, 'STANDARD', '2005-04-03');
+(1, 'System Admin', '0900000001', 'admin@senema.vn', '$2b$10$2G7pbub9uTYYR1V98QYKxO1POesbik5Qz6cfjcxHSFhd4Ep6HNJRi', 'ADMIN', 0, 'VIP', '1995-05-15'),
+(2, 'Nguyễn Minh (Staff Q1)', '0900000002', 'minh.staff@senema.vn', '$2b$10$2G7pbub9uTYYR1V98QYKxO1POesbik5Qz6cfjcxHSFhd4Ep6HNJRi', 'STAFF', 0, 'STANDARD', '2000-08-20'),
+(3, 'Lê Hoàng Nam (Staff LM81)', '0900000003', 'nam.staff@senema.vn', '$2b$10$2G7pbub9uTYYR1V98QYKxO1POesbik5Qz6cfjcxHSFhd4Ep6HNJRi', 'STAFF', 0, 'STANDARD', '2001-02-10'),
+(4, 'Alex Nguyen', '0912345678', 'alex.nguyen@example.com', '$2b$10$2G7pbub9uTYYR1V98QYKxO1POesbik5Qz6cfjcxHSFhd4Ep6HNJRi', 'CUSTOMER', 320, 'GOLD', '2003-09-12'),
+(5, 'Trần Anh Thư', '0901234568', 'thu.tran@example.com', '$2b$10$2G7pbub9uTYYR1V98QYKxO1POesbik5Qz6cfjcxHSFhd4Ep6HNJRi', 'CUSTOMER', 150, 'SILVER', '2004-11-25'),
+(6, 'Phạm Gia Bảo', '0987654321', 'bao.pham@example.com', '$2b$10$2G7pbub9uTYYR1V98QYKxO1POesbik5Qz6cfjcxHSFhd4Ep6HNJRi', 'CUSTOMER', 50, 'STANDARD', '2005-04-03');
 
 -- ============================================================================
 -- 3. CINEMAS (Cụm rạp SENEMA)

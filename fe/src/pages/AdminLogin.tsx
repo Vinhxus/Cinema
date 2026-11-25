@@ -1,7 +1,8 @@
-﻿import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import { ApiError, authApi, setStoredAuth } from '../api/adminApi';
 
 interface FormFieldProps {
   id: string;
@@ -57,6 +58,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     password: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,14 +69,41 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setErrorMessage(null);
+
+    try {
+      const result = await authApi.login(
+        credentials.identifier.trim(),
+        credentials.password
+      );
+
+      if (result.role === 'CUSTOMER') {
+        setErrorMessage(
+          'Access denied: Only Admin and Staff accounts can sign in here.'
+        );
+        return;
+      }
+
+      setStoredAuth(result.token, result.user);
       onLoginSuccess?.();
-      navigate('/admin/dashboard');
-    }, 400);
+
+      if (result.role === 'STAFF') {
+        navigate('/admin/check-in');
+      } else {
+        navigate('/admin/dashboard');
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage('Unable to reach server. Please check backend status.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -88,21 +117,30 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
             <span className="text-[#DC2626]">NEMA</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-[#0F172A] sm:text-4xl">
-            Administrator
+            Administrator & Staff
           </h1>
           <p className="mt-2.5 text-sm font-normal text-[#475569]">
-            Sign in to manage the system
+            Sign in to manage the cinema operations
           </p>
         </div>
 
         <section className="w-full max-w-[440px] rounded-2xl border border-[#F1F5F9] bg-white p-7 shadow-[0_8px_30px_rgb(15,23,42,0.04)] sm:p-9">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {errorMessage && (
+              <div
+                role="alert"
+                className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3.5 py-2.5 text-xs font-semibold text-[#B91C1C]"
+              >
+                {errorMessage}
+              </div>
+            )}
+
             <FormField
               id="identifier"
               name="identifier"
-              label="Email / Username"
+              label="Email / Phone Number"
               type="text"
-              placeholder="admin@cineverse.vn"
+              placeholder="admin@senema.vn"
               value={credentials.identifier}
               onChange={handleInputChange}
               autoComplete="username"
@@ -125,16 +163,12 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                 disabled={isSubmitting}
                 className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-r from-[#DC2626] via-[#EA580C] to-[#F59E0B] text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-all hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626] focus-visible:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                SIGN IN
+                {isSubmitting ? 'SIGNING IN...' : 'SIGN IN'}
               </button>
 
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-[#DC2626] transition-colors hover:text-[#B91C1C] focus-visible:underline focus-visible:outline-none"
-                >
-                  Forgot password?
-                </button>
+              <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                <span>Admin: admin@senema.vn</span>
+                <span>Staff: minh.staff@senema.vn</span>
               </div>
             </div>
           </form>
