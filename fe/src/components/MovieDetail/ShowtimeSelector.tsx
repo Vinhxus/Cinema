@@ -15,6 +15,7 @@ const AVAILABILITY_BADGE: Record<Availability, { label: string; className: strin
   available: null,
   best: { label: "BEST", className: "border border-red-300 text-red-500" },
   few: { label: "FEW", className: "border border-amber-300 text-amber-600" },
+  sold_out: { label: "SOLD OUT", className: "border border-slate-300 text-slate-500" },
 };
 
 export default function ShowtimeSelector({

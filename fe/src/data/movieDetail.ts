@@ -1,7 +1,7 @@
 import type { AgeRating, Movie } from "../components/MovieComponents/MovieCard";
 
 /* ---------- Types ---------- */
-export type Availability = "available" | "best" | "few";
+export type Availability = "available" | "best" | "few" | "sold_out";
 
 export interface Showtime {
   id: string;
