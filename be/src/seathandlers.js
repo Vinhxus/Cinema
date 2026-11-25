@@ -11,6 +11,16 @@ const getHolds = (showtimeId) => {
   return holds.get(showtimeId);
 };
 
+let ioInstance = null;
+
+export function setGlobalIO(io) {
+  ioInstance = io;
+}
+
+export function getGlobalIO() {
+  return ioInstance;
+}
+
 // Nhả ghế nếu đúng là socketId này đang giữ
 function release(io, showtimeId, seatId, socketId) {
   const map = holds.get(showtimeId);
@@ -19,22 +29,29 @@ function release(io, showtimeId, seatId, socketId) {
 
   clearTimeout(h.timer);
   map.delete(seatId);
-  io.to(roomOf(showtimeId)).emit("seat-released", { seatId });
+  const socketIO = io || ioInstance;
+  if (socketIO) {
+    socketIO.to(roomOf(showtimeId)).emit("seat-released", { seatId });
+  }
   return true;
 }
 
 // Gọi hàm này SAU KHI thanh toán thành công (từ route HTTP của bạn)
 export function markBooked(io, showtimeId, seatIds) {
+  const socketIO = io || ioInstance;
   const map = getHolds(showtimeId);
   for (const seatId of seatIds) {
     const h = map.get(seatId);
     if (h) clearTimeout(h.timer);
     map.delete(seatId);
   }
-  io.to(roomOf(showtimeId)).emit("seat-booked", { seatIds });
+  if (socketIO) {
+    socketIO.to(roomOf(showtimeId)).emit("seat-booked", { seatIds });
+  }
 }
 
 export function registerSeatHandlers(io, socket) {
+  setGlobalIO(io);
   const myHolds = new Set(); // "showtimeId|seatId"
 
   // Client vào xem 1 suất chiếu -> trả về danh sách ghế đang bị giữ
@@ -55,8 +72,6 @@ export function registerSeatHandlers(io, socket) {
 
     // Node.js chạy đơn luồng nên has() + set() bên dưới không bị chen ngang
     if (map.has(seatId)) return ack?.({ ok: false, reason: "held" });
-
-    // TODO: kiểm tra trong DB ghế này chưa bị đặt (booked) rồi mới cho giữ
 
     const timer = setTimeout(
       () => release(io, showtimeId, seatId, socket.id),
