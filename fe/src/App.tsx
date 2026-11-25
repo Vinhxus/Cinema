@@ -35,7 +35,8 @@ function App() {
         <Route path="/select-seat" element={<SelectSeat />} />
         <Route path="/booking/:showtimeId" element={<SelectSeat />} />
         <Route path="/food" element={<FoodPage />} />
-        <Route path="/movie" element={<MovieDetail />} />        
+        <Route path="/movie" element={<MovieDetail />} />
+        <Route path="/movie/:id" element={<MovieDetail />} />        
 
         {/* Payment & Ticket Flow */}
         <Route path="/payment" element={<Payment />} />

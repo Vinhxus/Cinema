@@ -6,11 +6,8 @@ import {
   Store, Tag, Utensils, X,
 } from "lucide-react";
 import { useBooking } from "../context/useBooking";
-// SeatType chỉ là kiểu -> phải dùng `import type` (cùng loại lỗi với BookingContextValue)
-import type { SeatType } from "../components/seatComponents/Seat";
-import { useCountdown } from "../hooks/useCountdown";
-import { COMBOS, type Category, type Combo } from "../data/combos";
-import { vnd } from "../utils/currency";
+import { SeatType } from "../components/seatComponents/Seat";
+import { Price } from "../data/Price";
 import { Navigate, useNavigate } from "react-router-dom";
 import dune from "../assets/dune.png";
 

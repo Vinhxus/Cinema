@@ -1,4 +1,4 @@
-import { Calendar, Clapperboard, LocateFixed } from "lucide-react";
+import { Calendar, Clapperboard, Loader2, LocateFixed } from "lucide-react";
 import Badge from "../MovieComponents/Badge";
 import type { Availability, Cinema, ShowDate } from "../../data/movieDetail";
 
@@ -7,6 +7,8 @@ interface ShowtimeSelectorProps {
   cinemas: Cinema[];
   selectedDateId: string;
   selectedShowtimeId: string | null;
+  /** true khi đang gọi lại /api/showtimes cho ngày khác. */
+  isLoading?: boolean;
   onSelectDate: (dateId: string) => void;
   onSelectShowtime: (showtimeId: string) => void;
 }
@@ -15,13 +17,26 @@ const AVAILABILITY_BADGE: Record<Availability, { label: string; className: strin
   available: null,
   best: { label: "BEST", className: "border border-red-300 text-red-500" },
   few: { label: "FEW", className: "border border-amber-300 text-amber-600" },
+  sold_out: { label: "SOLD OUT", className: "border border-slate-300 text-slate-500" },
 };
+
+/** BE đánh dấu isClosed khi suất đã qua giờ hoặc nằm trong 15 phút cấm bán vé. */
+const CLOSED_BADGE = { label: "CLOSED", className: "border border-slate-300 text-slate-500" };
+
+/** Màu nhãn ghế trống: xanh = còn nhiều, hổ phách = sắp hết, xám = không bán được. */
+function seatToneClassName(availability: Availability, isLocked: boolean): string {
+  if (isLocked) return "text-slate-400";
+  if (availability === "few" || availability === "best") return "text-amber-600";
+  if (availability === "sold_out") return "text-slate-500";
+  return "text-emerald-600";
+}
 
 export default function ShowtimeSelector({
   dates,
   cinemas,
   selectedDateId,
   selectedShowtimeId,
+  isLoading = false,
   onSelectDate,
   onSelectShowtime,
 }: ShowtimeSelectorProps) {
@@ -40,8 +55,17 @@ export default function ShowtimeSelector({
           <h2 className="font-['Outfit'] text-sm font-bold text-slate-900">Select Date &amp; Showtime</h2>
         </div>
         <div className="flex items-center gap-1.5 font-['Space_Grotesk'] text-[10px] font-semibold text-amber-600">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-          Updated every 30 seconds
+          {isLoading ? (
+            <>
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Đang tải suất chiếu
+            </>
+          ) : (
+            <>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Ghế trống cập nhật trực tiếp từ rạp
+            </>
+          )}
         </div>
       </div>
 
@@ -87,7 +111,7 @@ export default function ShowtimeSelector({
                   active ? "text-red-500" : "text-slate-400"
                 }`}
               >
-                {date.slots} slots
+                {date.slots} suất
               </span>
             </button>
           );
@@ -104,11 +128,12 @@ export default function ShowtimeSelector({
               </span>
               <div>
                 <h3 className="font-['Outfit'] text-sm font-bold text-slate-900">
-                  {cinema.name} <span className="text-amber-500">• {cinema.branch}</span>
+                  {cinema.name}
+                  {cinema.branch && <span className="text-amber-500"> • {cinema.branch}</span>}
                 </h3>
                 <p className="mt-0.5 flex flex-wrap items-center gap-1 font-['Outfit'] text-[11px] text-slate-500">
                   <LocateFixed className="h-3 w-3 text-slate-400" />
-                  {cinema.address} • {cinema.distance}
+                  {[cinema.address, cinema.distance].filter(Boolean).join(" • ")}
                 </p>
               </div>
             </div>
@@ -129,22 +154,39 @@ export default function ShowtimeSelector({
               <div className="mt-2 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                 {hall.showtimes.map((showtime) => {
                   const active = showtime.id === selectedShowtimeId;
-                  const badge = AVAILABILITY_BADGE[showtime.availability];
+                  const isLocked = Boolean(showtime.isSoldOut || showtime.isClosed);
+                  const badge = showtime.isClosed
+                    ? CLOSED_BADGE
+                    : AVAILABILITY_BADGE[showtime.availability];
 
                   return (
                     <button
                       key={showtime.id}
                       type="button"
                       onClick={() => onSelectShowtime(showtime.id)}
+                      disabled={isLocked}
                       aria-pressed={active}
+                      title={
+                        showtime.isClosed
+                          ? "Đã đóng bán vé (sát giờ chiếu)"
+                          : showtime.isSoldOut
+                            ? "Suất chiếu đã hết vé"
+                            : showtime.seatsLeft
+                      }
                       className={`rounded-lg border px-3 py-2 text-left transition ${
-                        active
-                          ? "border-amber-500 bg-amber-50 ring-1 ring-amber-400"
-                          : "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/40"
+                        isLocked
+                          ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-70"
+                          : active
+                            ? "border-amber-500 bg-amber-50 ring-1 ring-amber-400"
+                            : "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/40"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-1">
-                        <span className="font-['Outfit'] text-sm font-bold text-slate-900">
+                        <span
+                          className={`font-['Outfit'] text-sm font-bold ${
+                            isLocked ? "text-slate-400 line-through" : "text-slate-900"
+                          }`}
+                        >
                           {showtime.startTime}
                         </span>
                         {badge && <Badge className={badge.className}>{badge.label}</Badge>}
@@ -153,7 +195,15 @@ export default function ShowtimeSelector({
                         Ends {showtime.endTime}
                       </p>
                       <p className="font-['Space_Grotesk'] text-[9px] text-amber-600">
-                        {showtime.hall} • {showtime.hallNote}
+                        {[showtime.hall, showtime.hallNote].filter(Boolean).join(" • ")}
+                      </p>
+                      <p
+                        className={`mt-0.5 font-['Space_Grotesk'] text-[9px] font-semibold ${seatToneClassName(
+                          showtime.availability,
+                          isLocked,
+                        )}`}
+                      >
+                        {showtime.seatsLeft}
                       </p>
                     </button>
                   );
@@ -164,9 +214,9 @@ export default function ShowtimeSelector({
         </article>
       ))}
 
-      {!hasShowtimes && (
+      {!hasShowtimes && !isLoading && (
         <p className="py-10 text-center font-['Outfit'] text-sm text-slate-400">
-          No showtimes available for this date.
+          Ngày này chưa có suất chiếu. Hãy chọn ngày khác.
         </p>
       )}
     </section>
