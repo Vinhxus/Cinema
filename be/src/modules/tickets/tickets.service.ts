@@ -71,13 +71,11 @@ export function verifyTicketQR(token: string): TicketTokenPayload | null {
 
 /**
  * 3. Phát hành vé trong Transaction MySQL sau khi thanh toán thành công
- * Đảm bảo tính nguyên tử (Atomicity) và Idempotency (không phát hành vé trùng)
  */
 export async function issueTicketsForBooking(
     conn: PoolConnection,
     bookingId: number
 ): Promise<TicketRecord[]> {
-    // A. Kiểm tra vé đã được phát hành cho đơn hàng này chưa (Chống phát hành vé lặp)
     const [existingTickets] = await conn.query<any[]>(
         'SELECT * FROM ticket WHERE BookingID = ?',
         [bookingId]
@@ -88,7 +86,6 @@ export async function issueTicketsForBooking(
         return existingTickets as TicketRecord[];
     }
 
-    // B. Lấy thông tin các ghế trong đơn hàng cùng chi tiết Suất chiếu, Phòng, Rạp
     const [seatRows] = await conn.query<any[]>(
         `SELECT 
             os.OrderSeatID,
@@ -121,19 +118,16 @@ export async function issueTicketsForBooking(
 
     const issuedTickets: TicketRecord[] = [];
 
-    // C. Duyệt qua từng ghế để phát hành vé riêng biệt (1 vé tương ứng 1 ghế)
     for (const seat of seatRows) {
         const uniqueSuffix = Date.now().toString().slice(-6) + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
         const ticketNo = `TK${bookingId}-${seat.SeatLabel}-${uniqueSuffix}`;
         const barcode = `BC${bookingId}${seat.SeatID}${Date.now().toString().slice(-6)}`;
 
-        // Định dạng ngày và giờ chuẩn SQL
         const showDateStr = typeof seat.ShowDate === 'string'
             ? seat.ShowDate.slice(0, 10)
             : new Date(seat.ShowDate).toISOString().slice(0, 10);
         const startTimeStr = String(seat.StartTime).slice(0, 8);
 
-        // Sinh JWT token cho vé
         const jwtToken = generateTicketQR({
             ticketNo,
             bookingId,
@@ -146,7 +140,6 @@ export async function issueTicketsForBooking(
             time: startTimeStr
         });
 
-        // Chèn vào bảng ticket
         await conn.query(
             `INSERT INTO ticket (
                 TicketNo, BookingID, ShowtimeID, SeatID, Barcode, jwt_token, Price,
@@ -212,34 +205,8 @@ export async function getTicketsByBookingId(bookingId: number): Promise<TicketRe
 }
 
 /**
- * 5. Controller endpoint: Lấy danh sách vé theo BookingID
+ * 5. Lấy chi tiết 1 vé theo TicketNo, Barcode hoặc TicketID
  */
-export async function getTicketsByBooking(req: any, res: any) {
-    try {
-        const bookingId = Number(req.params.bookingId);
-        if (!bookingId || isNaN(bookingId) || bookingId <= 0) {
-            return res.status(400).json({
-                success: false,
-                data: null,
-                error: { code: 'INVALID_BOOKING_ID', message: 'Mã đơn hàng không hợp lệ' }
-            });
-        }
-        const tickets = await getTicketsByBookingId(bookingId);
-        return res.status(200).json({
-            success: true,
-            data: tickets,
-            error: null
-        });
-    } catch (error: any) {
-        return res.status(500).json({
-            success: false,
-            data: null,
-            error: { code: 'INTERNAL_ERROR', message: error.message }
-        });
-    }
-}
-
-// Lấy chi tiết 1 vé theo ID hoặc Mã Barcode/TicketNo
 export async function getTicketByIdOrCode(ticketIdOrCode: string | number) {
     const [rows] = await pool.query<any[]>(
         `SELECT 
@@ -254,9 +221,9 @@ export async function getTicketByIdOrCode(ticketIdOrCode: string | number) {
      JOIN movies m ON sh.MovieID = m.MovieID
      JOIN rooms rm ON sh.RoomID = rm.RoomID
      JOIN cinemas c ON rm.CinemaID = c.CinemaID
-     WHERE t.TicketNo = ? OR t.Barcode = ?
+     WHERE t.TicketNo = ? OR t.Barcode = ? OR t.BookingID = ?
      LIMIT 1`,
-        [ticketIdOrCode, ticketIdOrCode]
+        [ticketIdOrCode, ticketIdOrCode, ticketIdOrCode]
     );
 
     return rows.length > 0 ? rows[0] : null;

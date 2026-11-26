@@ -2,8 +2,39 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Home, RotateCcw, AlertCircle, PhoneCall, Mail, ArrowRight } from 'lucide-react';
 
-export const RefundCard: React.FC = () => {
+export interface RefundData {
+    refundId?: number;
+    refundReference?: string;
+    bookingId?: number;
+    bookingCode?: string;
+    movieTitle?: string;
+    cinemaName?: string;
+    roomNumber?: string;
+    originalPaidAmount?: number;
+    cancellationFee?: number;
+    refundAmount?: number;
+    refundRatePercent?: number;
+    refundDestination?: string;
+    reason?: string;
+    status?: string;
+}
+
+interface RefundCardProps {
+    data?: RefundData | null;
+}
+
+export const RefundCard: React.FC<RefundCardProps> = ({ data }) => {
     const navigate = useNavigate();
+
+    // Dữ liệu hiển thị (ưu tiên dùng dữ liệu từ API Backend, nếu chưa có thì dùng fallback mẫu)
+    const refundRef = data?.refundReference || 'RF-2024-99812C';
+    const movieTitle = data?.movieTitle || 'Dune: Part Two';
+    const hallInfo = data?.roomNumber ? `Phòng ${data.roomNumber}` : 'Hall 01 • IMAX Laser';
+    const destination = data?.refundDestination || 'MoMo E-Wallet';
+    const originalAmount = data?.originalPaidAmount ?? 390000;
+    const fee = data?.cancellationFee ?? 0;
+    const refundAmount = data?.refundAmount ?? 390000;
+    const ratePercent = data?.refundRatePercent ?? 100;
 
     return (
         <div className="w-full max-w-[820px] mx-auto pay-card pay-font-primary pay-text-primary rounded-2xl shadow-sm overflow-hidden border border-gray-300 p-6 sm:p-10 text-center">
@@ -29,23 +60,23 @@ export const RefundCard: React.FC = () => {
                         REFUND REFERENCE
                     </span>
                     <span className="font-mono font-bold pay-text-primary text-sm">
-                        RF-2024-99812C
+                        {refundRef}
                     </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <span className="text-[9px] font-bold pay-text-secondary uppercase block">CANCELLED SCREENING</span>
-                        <p className="font-bold pay-text-primary mt-0.5">Dune: Part Two</p>
-                        <span className="text-[10px] pay-text-secondary pay-font-secondary">Hall 01 • IMAX Laser (Seats F12, F13)</span>
+                        <p className="font-bold pay-text-primary mt-0.5">{movieTitle}</p>
+                        <span className="text-[10px] pay-text-secondary pay-font-secondary">{hallInfo}</span>
                     </div>
 
                     <div>
                         <span className="text-[9px] font-bold pay-text-secondary uppercase block">REFUND DESTINATION</span>
                         <p className="font-bold pay-text-primary mt-0.5">
-                            MoMo E-Wallet
+                            {destination}
                         </p>
-                        <span className="text-[10px] pay-text-secondary pay-font-secondary">Linked Phone: 0912 *** 678</span>
+                        <span className="text-[10px] pay-text-secondary pay-font-secondary">Ví MoMo đã liên kết</span>
                     </div>
 
                     <div>
@@ -61,15 +92,15 @@ export const RefundCard: React.FC = () => {
                 <div className="pt-2 border-t border-gray-300 space-y-1.5 text-[11px] pay-text-secondary pay-font-secondary">
                     <div className="flex justify-between">
                         <span>Total Original Paid:</span>
-                        <span className="font-mono pay-text-primary">390,000 ₫</span>
+                        <span className="font-mono pay-text-primary">{originalAmount.toLocaleString('vi-VN')} ₫</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Cancellation Policy Fee (Early Notice):</span>
-                        <span className="font-mono text-emerald-600">0 ₫ (Free Cancellation)</span>
+                        <span>Cancellation Policy Fee ({100 - ratePercent}%):</span>
+                        <span className="font-mono text-emerald-600">{fee.toLocaleString('vi-VN')} ₫</span>
                     </div>
                     <div className="flex justify-between font-bold pay-text-primary text-xs pt-1.5 border-t border-gray-300">
-                        <span>Total Amount to be Refunded:</span>
-                        <span className="font-mono text-amber-600 text-sm">390,000 ₫</span>
+                        <span>Total Amount to be Refunded ({ratePercent}%):</span>
+                        <span className="font-mono text-amber-600 text-sm">{refundAmount.toLocaleString('vi-VN')} ₫</span>
                     </div>
                 </div>
             </div>
@@ -79,7 +110,7 @@ export const RefundCard: React.FC = () => {
                 <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="space-y-1 text-xs text-blue-950 leading-relaxed">
                     <p>
-                        A confirmation receipt and cancellation voucher have been dispatched to your email (<strong>alex.nguyen@example.com</strong>).
+                        A confirmation receipt and cancellation voucher have been processed for booking <strong>#{data?.bookingCode || data?.bookingId || 'N/A'}</strong>.
                     </p>
                     <p className="text-[11px] pay-text-secondary pay-font-secondary pt-0.5">
                         Your released seats are now accessible to other moviegoers. If the funds do not reflect within 48 hours, please reach out to CineVerse support.
@@ -91,7 +122,7 @@ export const RefundCard: React.FC = () => {
             <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
                 <button
                     type="button"
-                    onClick={() => navigate('/homepage')}
+                    onClick={() => navigate('/')}
                     className="w-full sm:w-1/2 py-3 px-4 bg-[#f59e0b] hover:bg-amber-600 active:scale-[0.98] text-black font-black rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-md shadow-amber-500/20 cursor-pointer uppercase tracking-wider"
                 >
                     <Home className="w-4 h-4" />

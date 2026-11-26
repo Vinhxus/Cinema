@@ -2,8 +2,18 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Share2, CheckCircle2 } from 'lucide-react';
 
-export const TicketHeaderActions: React.FC = () => {
+interface TicketHeaderActionsProps {
+    data?: any;
+}
+
+export const TicketHeaderActions: React.FC<TicketHeaderActionsProps> = ({ data }) => {
     const navigate = useNavigate();
+
+    const bookingCode = data?.BookingCode || data?.BookingID || 'CV-ONLINE';
+    const customerName = data?.customer_name || 'Khách hàng';
+    const paymentTime = data?.payment_time
+        ? new Date(data.payment_time).toLocaleString('vi-VN')
+        : 'Đã thanh toán';
 
     return (
         <div className="pay-font-primary flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-300 pb-5">
@@ -19,7 +29,7 @@ export const TicketHeaderActions: React.FC = () => {
                     <span>/</span>
                     <span className="hover:opacity-70 cursor-pointer transition">My Bookings</span>
                     <span>/</span>
-                    <span className="text-amber-700 font-mono font-semibold">CV-2024-88492X</span>
+                    <span className="text-amber-700 font-mono font-semibold">#{bookingCode}</span>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -33,12 +43,11 @@ export const TicketHeaderActions: React.FC = () => {
                 </div>
 
                 <p className="text-xs pay-text-secondary pay-font-secondary">
-                    Booking Ref: <span className="pay-text-primary font-mono font-bold">CV-2024-88492X</span> • Paid via{' '}
-                    <strong className="text-[#A50064]">MoMo App</strong> at 20:20, Oct 24, 2024
+                    Booking Ref: <span className="pay-text-primary font-mono font-bold">#{bookingCode}</span> • Customer: {' '}
+                    <strong className="text-gray-800">{customerName}</strong> ({paymentTime})
                 </p>
             </div>
 
-            {/* Chỉ giữ lại nút Share */}
             <div className="flex items-center gap-2.5">
                 <button
                     type="button"

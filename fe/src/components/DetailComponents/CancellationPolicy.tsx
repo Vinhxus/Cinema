@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 
-export const CancellationPolicy: React.FC = () => {
+interface CancellationPolicyProps {
+    bookingId?: number;
+}
+
+export const CancellationPolicy: React.FC<CancellationPolicyProps> = ({ bookingId }) => {
+    const navigate = useNavigate();
     const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
     const toggleAccordion = (id: string) => {
@@ -20,9 +26,17 @@ export const CancellationPolicy: React.FC = () => {
                         Transparent and automated refund policy powered by CineVerse Booking Protection.
                     </p>
                 </div>
-                <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-300 px-3 py-1 rounded-full font-bold self-start">
-                    ● Eligible for cancellation (3h 45m left)
-                </span>
+
+                {bookingId && (
+                    <button
+                        type="button"
+                        onClick={() => navigate(`/refund?bookingId=${bookingId}`)}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm self-start"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Yêu cầu hoàn vé</span>
+                    </button>
+                )}
             </div>
 
             <div className="space-y-3">
@@ -36,19 +50,13 @@ export const CancellationPolicy: React.FC = () => {
                             <span className="text-[10px] pay-text-secondary font-bold uppercase">&gt; 4 hours before</span>
                             <span className="text-emerald-700 font-black text-lg">100% Refund</span>
                         </div>
-                        <p className="text-xs pay-text-secondary pay-font-secondary mt-2">
-                            Full ticket refund. Standard service fee of 10,000 ₫ is waived for CineClub VIP members.
-                        </p>
                     </div>
 
-                    <div className="bg-white border border-amber-400 rounded-2xl p-4 relative overflow-hidden ring-1 ring-amber-400/40">
+                    <div className="bg-white border border-amber-400 rounded-2xl p-4 relative overflow-hidden">
                         <div className="flex justify-between items-start">
-                            <span className="text-[10px] text-amber-700 font-bold uppercase">2h - 4h before (Current)</span>
+                            <span className="text-[10px] text-amber-700 font-bold uppercase">2h - 4h before</span>
                             <span className="text-amber-700 font-black text-lg">50% Refund</span>
                         </div>
-                        <p className="text-xs pay-text-secondary pay-font-secondary mt-2">
-                            50% cash refund or 100% converted into CinePass Voucher valid for 90 days.
-                        </p>
                     </div>
 
                     <div className="bg-white border border-gray-300 rounded-2xl p-4 opacity-70">
@@ -56,54 +64,8 @@ export const CancellationPolicy: React.FC = () => {
                             <span className="text-[10px] pay-text-secondary font-bold uppercase">&lt; 2 hours before</span>
                             <span className="text-rose-600 font-black text-lg">0% Refund</span>
                         </div>
-                        <p className="text-xs pay-text-secondary pay-font-secondary mt-2">
-                            Non-refundable within 2 hours of showtime as auditorium seating is locked.
-                        </p>
                     </div>
                 </div>
-            </div>
-
-            <div className="space-y-2 pt-2">
-                {[
-                    {
-                        id: 'fnb',
-                        title: 'Food & Beverage (F&B) Cancellation Policy',
-                        desc: 'Unredeemed popcorn and beverages are 100% refundable up to 30 minutes before showtime.'
-                    },
-                    {
-                        id: 'refund_method',
-                        title: 'Refund Processing Methods & Timelines',
-                        desc: 'Refunds sent directly back to original MoMo e-wallet within 5 to 15 minutes.'
-                    },
-                    {
-                        id: 'special',
-                        title: 'Special Screenings Policy (Sneak Show, Premiere, Holidays)',
-                        desc: 'Special premieres and midnight screenings have customized refund rules.'
-                    }
-                ].map((item) => (
-                    <div
-                        key={item.id}
-                        className="bg-white border border-gray-300 rounded-xl overflow-hidden"
-                    >
-                        <button
-                            type="button"
-                            onClick={() => toggleAccordion(item.id)}
-                            className="w-full px-4 py-3 text-left flex justify-between items-center text-xs font-bold pay-text-primary hover:opacity-70 transition cursor-pointer"
-                        >
-                            <span>{item.title}</span>
-                            {openAccordion === item.id ? (
-                                <ChevronUp className="w-4 h-4 text-amber-600" />
-                            ) : (
-                                <ChevronDown className="w-4 h-4 pay-text-secondary" />
-                            )}
-                        </button>
-                        {openAccordion === item.id && (
-                            <div className="px-4 pb-3.5 text-xs pay-text-secondary pay-font-secondary border-t border-gray-200 pt-2.5">
-                                {item.desc}
-                            </div>
-                        )}
-                    </div>
-                ))}
             </div>
         </div>
     );

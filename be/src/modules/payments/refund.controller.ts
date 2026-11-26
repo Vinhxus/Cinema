@@ -1,24 +1,25 @@
 import { Request, Response } from 'express';
 import pool from '../../config/db.js';
 
-// POST /api/payments/refund - Xử lý yêu cầu hoàn tiền
+// POST /api/payments/refund - Xử lý yêu cầu hoàn tiền (Đã đồng bộ MySQL Schema Senema)
 export const handleRefund = async (req: Request, res: Response) => {
     const connection = await pool.getConnection();
     try {
-        const { bookingId, reason } = req.body;
+        const bookingId = Number(req.body.bookingId);
+        const reason = req.body.reason;
 
-        if (!bookingId) {
+        if (!bookingId || isNaN(bookingId) || bookingId <= 0) {
             return res.status(400).json({
                 success: false,
-                error: { message: 'Booking ID không được để trống' }
+                error: { message: 'Booking ID không hợp lệ' }
             });
         }
 
         await connection.beginTransaction();
 
-        // 1. Kiểm tra đơn hàng có tồn tại và đã thanh toán chưa
-        const [orders]: any = await connection.execute(
-            `SELECT status FROM booking WHERE BookingID = ?`,
+        // 1. Kiểm tra đơn hàng có tồn tại và đã thanh toán chưa (SELECT FOR UPDATE)
+        const [orders]: any = await connection.query(
+            `SELECT BookingID, total_amount, status FROM booking WHERE BookingID = ? FOR UPDATE`,
             [bookingId]
         );
 
@@ -30,35 +31,56 @@ export const handleRefund = async (req: Request, res: Response) => {
             });
         }
 
-        // 2. Cập nhật trạng thái booking sang REFUNDED
-        await connection.execute(
-            `UPDATE booking SET status = 'REFUNDED', refund_reason = ? WHERE BookingID = ?`,
-            [reason || 'Khách hàng yêu cầu hoàn tiền', bookingId]
+        const b = orders[0];
+        const refundRef = `RF-${Date.now().toString().slice(-8)}`;
+
+        // 2. Tạo bản ghi hoàn tiền vào bảng refunds
+        await connection.query(
+            `INSERT INTO refunds (
+                RefundReference, BookingID, OriginalPaidAmount, CancellationFee,
+                RefundAmount, RefundRatePercent, RefundDestination, Reason, Status, CompletedAt
+             ) VALUES (?, ?, ?, 0, ?, 100, 'MoMo E-Wallet', ?, 'COMPLETED', NOW())`,
+            [refundRef, b.BookingID, b.total_amount, b.total_amount, reason || 'Khách hàng yêu cầu hoàn tiền']
         );
 
-        // 3. Vô hiệu hóa vé
-        await connection.execute(
-            `UPDATE tickets SET status = 'CANCELLED' WHERE booking_id = ?`,
+        // 3. Cập nhật trạng thái booking & payment sang REFUNDED
+        await connection.query(
+            `UPDATE booking SET status = 'REFUNDED', updated_at = NOW() WHERE BookingID = ?`,
             [bookingId]
         );
 
-        // 4. Mở lại ghế trống (AVAILABLE)
-        await connection.execute(
-            `UPDATE seats s 
-       JOIN booking_seats bs ON s.id = bs.seat_id 
-       SET s.status = 'AVAILABLE' 
-       WHERE bs.booking_id = ?`,
+        await connection.query(
+            `UPDATE payment SET status = 'REFUNDED', updated_at = NOW() WHERE BookingID = ?`,
+            [bookingId]
+        );
+
+        // 4. Vô hiệu hóa vé trong bảng ticket
+        await connection.query(
+            `UPDATE ticket SET status = 'REFUNDED' WHERE BookingID = ?`,
+            [bookingId]
+        );
+
+        // 5. Mở lại ghế trống (RELEASED) trong bảng order_seats
+        await connection.query(
+            `UPDATE order_seats SET SeatStatus = 'RELEASED' WHERE BookingID = ?`,
             [bookingId]
         );
 
         await connection.commit();
+
         return res.status(200).json({
             success: true,
-            data: { bookingId, status: 'REFUNDED' },
+            data: {
+                refundReference: refundRef,
+                bookingId,
+                status: 'REFUNDED',
+                refundAmount: Number(b.total_amount)
+            },
             message: 'Yêu cầu hoàn tiền thành công'
         });
     } catch (error: any) {
         await connection.rollback();
+        console.error('[handleRefund] Error:', error);
         return res.status(500).json({
             success: false,
             error: { message: error.message || 'Lỗi hệ thống khi hoàn tiền' }
