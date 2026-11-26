@@ -1,22 +1,11 @@
-// SERVICE = nghiệp vụ giữ ghế. Không biết gì về Socket.io hay Express:
-// nhận dữ liệu đã validate, gọi repository, trả kết quả, và phát "sự kiện nghiệp vụ"
-// qua seatEvents. Tầng socket nghe seatEvents để báo cho các client.
-// => Route thanh toán (HTTP), job dọn ghế, socket... đều gọi chung các hàm này.
 import { EventEmitter } from 'node:events';
 import { randomBytes } from 'node:crypto';
 import pool, { withTransaction } from '../config/db.js';
 import { BOOKING } from '../config/env.js';
 import * as seatRepo from '../repositories/seat.repository.js';
 
-/**
- * Các sự kiện phát ra:
- *  - 'seats-changed' { showtimeId, seatIds: string[], status: 'held' | 'booked' | 'available' }
- *  - 'holds-changed' { sessionId, showtimeId }   -> giỏ ghế của 1 phiên vừa đổi
- *  - 'hold-expired'  { sessionId, showtimeId }   -> hết giờ giữ ghế
- */
 export const seatEvents = new EventEmitter();
 
-/** Lý do thất bại, FE dựa vào đây để hiện thông báo */
 export const HoldError = Object.freeze({
   SHOWTIME_NOT_FOUND: 'SHOWTIME_NOT_FOUND',
   SALES_CLOSED: 'SALES_CLOSED',
@@ -27,14 +16,8 @@ export const HoldError = Object.freeze({
   NO_HOLD: 'NO_HOLD',
 });
 
-/* ------------------------------------------------------------------ */
-/* Helpers                                                             */
-/* ------------------------------------------------------------------ */
-
-// DECIMAL từ mysql2 về dạng string ("140000.00") -> đổi sang number
 const money = (v) => Math.round(Number(v) || 0);
 
-/** Giá 1 ghế = Giá suất chiếu × số người/ghế + Phụ thu loại ghế (UC-ADM-02) */
 export const seatPrice = (showtime, seat) =>
   money(showtime.BaseTicketPrice) * (Number(seat.SeatsPerUnit) || 1) + money(seat.Surcharge);
 
@@ -45,7 +28,6 @@ const newBookingCode = () =>
 
 const isDuplicate = (err) => err?.code === 'ER_DUP_ENTRY';
 
-/** Ném ra trong transaction để buộc ROLLBACK nhưng vẫn trả về một kết quả bình thường */
 class Abort extends Error {
   constructor(result) {
     super(result.reason);
@@ -53,17 +35,11 @@ class Abort extends Error {
   }
 }
 
-/**
- * "Khóa" theo phiên trong 1 process: các thao tác của CÙNG một phiên chạy lần lượt.
- * Lý do: 1 người mở 2 tab, bấm 2 ghế cùng lúc -> cả 2 request cùng thấy
- * "chưa có booking HOLDING" và tạo ra 2 booking. Xếp hàng theo sessionId là đủ.
- * (Giữa các phiên KHÁC nhau thì unique key trong DB mới là thứ chống double-booking.)
- */
 const sessionQueues = new Map();
 function withSessionLock(sessionId, task) {
   const prev = sessionQueues.get(sessionId) ?? Promise.resolve();
   const run = prev.then(task, task);
-  const tail = run.catch(() => {});
+  const tail = run.catch(() => { });
   sessionQueues.set(sessionId, tail);
   tail.then(() => {
     if (sessionQueues.get(sessionId) === tail) sessionQueues.delete(sessionId);
@@ -76,7 +52,7 @@ const toSeatDto = (row, price) => ({
   row: row.SeatRow,
   number: row.SeatNumber,
   label: row.SeatLabel,
-  type: row.TypeCode, // 'standard' | 'vip' | 'couple'
+  type: row.TypeCode,
   price,
 });
 
@@ -101,12 +77,11 @@ async function loadShowtime(db, showtimeId) {
   return seatRepo.findShowtimeById(db, showtimeId, BOOKING.SALES_CUTOFF_MINUTES);
 }
 
-/** Trạng thái ghế của 1 suất, tách ghế của phiên hiện tại ra riêng */
 async function buildTaken(db, showtimeId, sessionId) {
   const rows = await seatRepo.findTakenSeats(db, showtimeId);
   const taken = {};
   for (const r of rows) {
-    if (sessionId && r.SeatStatus === 'HELD' && r.SessionID === sessionId) continue; // ghế của mình
+    if (sessionId && r.SeatStatus === 'HELD' && r.SessionID === sessionId) continue;
     taken[String(r.SeatID)] = r.SeatStatus === 'BOOKED' ? 'booked' : 'held';
   }
   return taken;
@@ -123,10 +98,6 @@ async function buildMyHold(db, sessionId, showtimeId) {
     seats,
   };
 }
-
-/* ------------------------------------------------------------------ */
-/* Đọc dữ liệu                                                         */
-/* ------------------------------------------------------------------ */
 
 export async function listUpcomingShowtimes({ date }) {
   const rows = await seatRepo.findUpcomingShowtimes(pool, {
@@ -145,7 +116,6 @@ export async function listUpcomingShowtimes({ date }) {
   }));
 }
 
-/** Sơ đồ ghế (layout + giá + trạng thái hiện tại). Trả null nếu không có suất. */
 export async function getSeatMap(showtimeId) {
   const showtime = await loadShowtime(pool, showtimeId);
   if (!showtime) return null;
@@ -166,7 +136,6 @@ export async function getSeatMap(showtimeId) {
   };
 }
 
-/** Snapshot khi client join phòng suất chiếu (và mỗi lần reconnect) */
 export async function getSnapshot({ sessionId, showtimeId }) {
   const showtime = await loadShowtime(pool, showtimeId);
   if (!showtime) return { ok: false, reason: HoldError.SHOWTIME_NOT_FOUND };
@@ -178,16 +147,11 @@ export async function getSnapshot({ sessionId, showtimeId }) {
   return { ok: true, taken, mine: my.mine, expiresAt: my.expiresAt };
 }
 
-/* ------------------------------------------------------------------ */
-/* Giữ ghế                                                             */
-/* ------------------------------------------------------------------ */
-
 export function holdSeat({ sessionId, showtimeId, seatId }) {
   return withSessionLock(sessionId, () => holdSeatUnsafe({ sessionId, showtimeId, seatId }));
 }
 
 async function holdSeatUnsafe({ sessionId, showtimeId, seatId }) {
-  // 1) Kiểm tra suất chiếu và ghế (đọc thường, chưa cần transaction)
   const showtime = await loadShowtime(pool, showtimeId);
   if (!showtime) return { ok: false, reason: HoldError.SHOWTIME_NOT_FOUND };
   if (!showtime.IsOnSale) return { ok: false, reason: HoldError.SALES_CLOSED };
@@ -195,12 +159,10 @@ async function holdSeatUnsafe({ sessionId, showtimeId, seatId }) {
   const seat = await seatRepo.findSeatInRoom(pool, seatId, showtime.RoomID);
   if (!seat) return { ok: false, reason: HoldError.SEAT_NOT_FOUND };
 
-  // 2) Dọn các booking đã hết hạn trước, để ghế hết hạn không còn chặn unique key
   await sweepExpiredHolds();
 
   const price = seatPrice(showtime, seat);
 
-  // 3) Transaction: lấy/tạo giỏ HOLDING -> kiểm tra giới hạn -> ghi ghế
   const result = await withTransaction(async (conn) => {
     let booking = await seatRepo.findActiveHold(conn, { sessionId, showtimeId, forUpdate: true });
     if (!booking) {
@@ -208,13 +170,12 @@ async function holdSeatUnsafe({ sessionId, showtimeId, seatId }) {
         sessionId,
         showtimeId,
         bookingCode: newBookingCode(),
-        holdMinutes: BOOKING.HOLD_MINUTES, // FR-BK-10: đếm giờ từ ghế ĐẦU TIÊN, không reset
+        holdMinutes: BOOKING.HOLD_MINUTES,
       });
     }
 
     const heldNow = await seatRepo.findHeldSeatsOfBooking(conn, booking.BookingID);
     if (heldNow.some((s) => String(s.SeatID) === String(seatId))) {
-      // Bấm 2 lần / 2 tab cùng gửi -> coi như thành công (idempotent)
       return { ok: true, booking, changed: false };
     }
     if (heldNow.length >= BOOKING.MAX_SEATS_PER_ORDER) {
@@ -234,9 +195,6 @@ async function holdSeatUnsafe({ sessionId, showtimeId, seatId }) {
         });
       }
     } catch (err) {
-      // Unique key (ShowtimeID, SeatID, ActiveLock) bị trùng = ghế đã có người giữ/mua.
-      // Người đến trước đã ghi được dòng HELD; người đến sau rơi vào đây (FR-BK-07).
-      // Ném Abort để ROLLBACK cả booking vừa tạo (không để lại giỏ rỗng đang đếm giờ).
       if (isDuplicate(err)) throw new Abort({ ok: false, reason: HoldError.TAKEN });
       throw err;
     }
@@ -245,14 +203,12 @@ async function holdSeatUnsafe({ sessionId, showtimeId, seatId }) {
     return { ok: true, booking, changed: true };
   }).catch((err) => {
     if (err instanceof Abort) return err.result;
-    // Deadlock giữa 2 transaction cũng nghĩa là "có người tranh ghế": trả TAKEN
     if (err?.code === 'ER_LOCK_DEADLOCK') return { ok: false, reason: HoldError.TAKEN };
     throw err;
   });
 
   if (!result.ok) return result;
 
-  // 4) Commit xong mới báo cho mọi người (không báo khi DB còn có thể rollback)
   if (result.changed) {
     seatEvents.emit('seats-changed', { showtimeId: String(showtimeId), seatIds: [String(seatId)], status: 'held' });
     seatEvents.emit('holds-changed', { sessionId, showtimeId: String(showtimeId) });
@@ -260,10 +216,6 @@ async function holdSeatUnsafe({ sessionId, showtimeId, seatId }) {
   const my = await buildMyHold(pool, sessionId, showtimeId);
   return { ok: true, mine: my.mine, expiresAt: my.expiresAt };
 }
-
-/* ------------------------------------------------------------------ */
-/* Bỏ chọn ghế                                                         */
-/* ------------------------------------------------------------------ */
 
 export function releaseSeat({ sessionId, showtimeId, seatId }) {
   return withSessionLock(sessionId, () => releaseSeatUnsafe({ sessionId, showtimeId, seatId }));
@@ -279,7 +231,6 @@ async function releaseSeatUnsafe({ sessionId, showtimeId, seatId }) {
 
     const remaining = await seatRepo.findHeldSeatsOfBooking(conn, booking.BookingID);
     if (remaining.length === 0) {
-      // Bỏ hết ghế = hủy giỏ. Lần chọn sau sẽ có booking mới và đồng hồ mới (UC-03 Alt)
       await seatRepo.setBookingStatus(conn, booking.BookingID, 'CANCELED');
     }
     await seatRepo.recalcBookingTotals(conn, booking.BookingID);
@@ -294,7 +245,6 @@ async function releaseSeatUnsafe({ sessionId, showtimeId, seatId }) {
   return { ok: true, mine: my.mine, expiresAt: my.expiresAt };
 }
 
-/** Phiên rời đi hẳn (đóng tab quá thời gian ân hạn) -> nhả mọi ghế đang giữ */
 export function releaseAllForSession(sessionId) {
   return withSessionLock(sessionId, async () => {
     const holds = await seatRepo.findHoldsBySession(pool, sessionId);
@@ -317,10 +267,6 @@ export function releaseAllForSession(sessionId) {
   });
 }
 
-/* ------------------------------------------------------------------ */
-/* Kiểm tra trước khi sang bước tiếp theo (FR-BK-20)                   */
-/* ------------------------------------------------------------------ */
-
 export async function verifyHold({ sessionId, showtimeId }) {
   const my = await buildMyHold(pool, sessionId, showtimeId);
   if (!my.booking || my.seats.length === 0) return { ok: false, reason: HoldError.NO_HOLD };
@@ -335,13 +281,8 @@ export async function verifyHold({ sessionId, showtimeId }) {
   };
 }
 
-/* ------------------------------------------------------------------ */
-/* Job dọn ghế hết hạn (FR-BK-13, FR-BK-14)                            */
-/* ------------------------------------------------------------------ */
-
 let sweeping = null;
 
-/** Chạy định kỳ + trước mỗi lần giữ ghế. Gọi chồng nhau thì dùng chung 1 lượt. */
 export function sweepExpiredHolds() {
   if (!sweeping) {
     sweeping = sweepOnce().finally(() => {
@@ -355,7 +296,6 @@ async function sweepOnce() {
   const expired = await seatRepo.findExpiredHolds(pool);
   for (const hold of expired) {
     const seatIds = await withTransaction(async (conn) => {
-      // Kiểm tra lại trong transaction: có thể booking vừa chuyển sang thanh toán
       if (!(await seatRepo.lockExpiredHold(conn, hold.BookingID))) return null;
       const released = await seatRepo.releaseAllHeldSeats(conn, hold.BookingID);
       await seatRepo.setBookingStatus(conn, hold.BookingID, 'EXPIRED');
@@ -375,10 +315,6 @@ async function sweepOnce() {
     }
   }
 }
-
-/* ------------------------------------------------------------------ */
-/* Cho module Payment gọi sau khi đã cập nhật DB sang BOOKED            */
-/* ------------------------------------------------------------------ */
 
 export function notifyBooked(showtimeId, seatIds) {
   seatEvents.emit('seats-changed', {
