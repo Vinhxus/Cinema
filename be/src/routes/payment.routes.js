@@ -6,8 +6,8 @@ import { checkoutSchema, createPaymentSchema } from '../validators/payment.valid
 const router = Router();
 
 router.post('/orders/:orderId/checkout', validate(checkoutSchema), paymentController.checkoutOrder);
-router.post('/payments/momopay/create', validate(createPaymentSchema), paymentController.createMomoPayment);
-router.get('/payments/momopay/return', paymentController.handleMomoReturn);
-router.post('/payments/momopay/ipn', paymentController.handleMomoIPN);
+router.post('/momopay/create', validate(createPaymentSchema), paymentController.createMomoPayment);
+router.get('/momopay/return', paymentController.handleMomoReturn);
+router.post('/momopay/ipn', paymentController.handleMomoIPN);
 
 export default router;

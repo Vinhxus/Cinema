@@ -4,9 +4,9 @@ import { sendSuccess } from '../utils/response.js';
 export const checkoutOrder = async (req, res, next) => {
     try {
         const { orderId } = req.params;
-        const { phone, email, ageConfirmed } = req.body;
-        const result = await paymentService.checkoutOrder(orderId, { phone, email, ageConfirmed });
-        return sendSuccess(res, result, 'Cập nhật thông tin checkout thành công');
+        const { name, phone, email, ageConfirmed } = req.body;
+        const result = await paymentService.checkoutOrder(orderId, { name, phone, email, ageConfirmed });
+        return sendSuccess(res, result, 'Cập nhật thông tin khách hàng thành công');
     } catch (error) {
         next(error);
     }
@@ -14,9 +14,9 @@ export const checkoutOrder = async (req, res, next) => {
 
 export const createMomoPayment = async (req, res, next) => {
     try {
-        const { orderId } = req.body;
-        const paymentUrl = await paymentService.createMomoPayment(orderId);
-        return sendSuccess(res, { paymentUrl }, 'Tạo URL thanh toán Momo thành công');
+        const { bookingId } = req.body;
+        const payUrl = await paymentService.createMomoPayment(bookingId);
+        return sendSuccess(res, { payUrl }, 'Tạo liên kết thanh toán MoMo thành công');
     } catch (error) {
         next(error);
     }
@@ -25,7 +25,7 @@ export const createMomoPayment = async (req, res, next) => {
 export const handleMomoReturn = async (req, res, next) => {
     try {
         const result = await paymentService.processMomoReturn(req.query);
-        return sendSuccess(res, result, 'Xử lý kết quả trả về từ Momo thành công');
+        return sendSuccess(res, result, 'Xử lý phản hồi MoMo thành công');
     } catch (error) {
         next(error);
     }
@@ -34,7 +34,6 @@ export const handleMomoReturn = async (req, res, next) => {
 export const handleMomoIPN = async (req, res, next) => {
     try {
         await paymentService.processMomoIPN(req.body);
-        // Momo yêu cầu phản hồi HTTP 204 No Content hoặc HTTP 200 tùy cấu hình IPN
         return res.status(204).send();
     } catch (error) {
         next(error);

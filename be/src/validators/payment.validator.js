@@ -6,14 +6,15 @@ export const checkoutSchema = z.object({
     body: z.object({
         phone: z.string().regex(phoneRegex, 'Số điện thoại không hợp lệ (định dạng Việt Nam)'),
         email: z.string().email('Email không đúng định dạng'),
-        ageConfirmed: z.boolean().refine((val) => val === true, {
-            message: 'Bạn phải xác nhận đủ điều kiện độ tuổi để xem phim',
+        name: z.string().min(1, 'Họ tên không được để trống'),
+        ageConfirmed: z.enum(['P', 'T13', 'T16', 'T18'], {
+            errorMap: () => ({ message: 'Xác nhận độ tuổi không hợp lệ' }),
         }),
     }),
 });
 
 export const createPaymentSchema = z.object({
     body: z.object({
-        orderId: z.string().min(1, 'Order ID không được để trống'),
+        bookingId: z.number().int().positive('BookingID phải là số nguyên dương'),
     }),
 });

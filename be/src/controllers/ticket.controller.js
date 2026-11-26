@@ -4,8 +4,8 @@ import { sendSuccess } from '../utils/response.js';
 export const getTicketDetails = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const ticket = await ticketService.getTicketById(id);
-        return sendSuccess(res, ticket, 'Lấy chi tiết vé thành công');
+        const tickets = await ticketService.getTicketByNo(id);
+        return sendSuccess(res, tickets, 'Lấy thông tin vé thành công');
     } catch (error) {
         next(error);
     }
@@ -14,8 +14,8 @@ export const getTicketDetails = async (req, res, next) => {
 export const lookupTicket = async (req, res, next) => {
     try {
         const { code, phone } = req.query;
-        const tickets = await ticketService.lookupTicket({ code, phone });
-        return sendSuccess(res, tickets, 'Tra cứu vé thành công');
+        const tickets = await ticketService.lookupTickets({ code, phone });
+        return sendSuccess(res, tickets, 'Tra cứu danh sách vé thành công');
     } catch (error) {
         next(error);
     }
@@ -24,7 +24,7 @@ export const lookupTicket = async (req, res, next) => {
 export const cancelTicket = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const result = await ticketService.cancelTicket(id);
+        const result = await ticketService.cancelTicketAndRefund(id);
         return sendSuccess(res, result, 'Hủy vé và hoàn tiền thành công');
     } catch (error) {
         next(error);

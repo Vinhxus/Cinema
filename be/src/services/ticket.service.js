@@ -1,40 +1,44 @@
 import pool from '../config/db.js';
 import AppError from '../utils/AppError.js';
 
-export const getTicketById = async (ticketId) => {
+export const getTicketByNo = async (ticketNo) => {
     const [rows] = await pool.query(
-        `SELECT t.*, b.customer_phone, b.customer_email, s.show_time, m.title as movie_title, c.name as cinema_name, r.name as room_name
+        `SELECT t.*, b.customer_name, b.customer_phone, b.customer_email, b.BookingCode,
+            m.Title as movie_title, m.PosterUrl, c.CinemaName, r.RoomNumber
      FROM ticket t
-     JOIN booking b ON t.booking_id = b.id
-     JOIN showtimes s ON b.showtime_id = s.id
-     JOIN movies m ON s.movie_id = m.id
-     JOIN rooms r ON s.room_id = r.id
-     JOIN cinemas c ON r.cinema_id = c.id
-     WHERE t.id = ?`,
-        [ticketId]
+     JOIN booking b ON t.BookingID = b.BookingID
+     JOIN showtimes s ON t.ShowtimeID = s.ShowtimeID
+     JOIN movies m ON s.MovieID = m.MovieID
+     JOIN cinemas c ON t.CinemaID = c.CinemaID
+     JOIN rooms r ON s.RoomID = r.RoomID
+     WHERE t.TicketNo = ? OR b.BookingCode = ?`,
+        [ticketNo, ticketNo]
     );
 
-    if (!rows.length) throw new AppError('Không tìm thấy vé', 404);
-    return rows[0];
+    if (!rows.length) throw new AppError('Không tìm thấy thông tin vé', 404);
+    return rows;
 };
 
-export const lookupTicket = async ({ code, phone }) => {
+export const lookupTickets = async ({ code, phone }) => {
     if (!code && !phone) {
-        throw new AppError('Vui lòng cung cấp mã vé hoặc số điện thoại tra cứu', 400);
+        throw new AppError('Vui lòng cung cấp mã vé/đơn hàng hoặc số điện thoại tra cứu', 400);
     }
 
     let query = `
-    SELECT t.id as ticket_id, t.qr_code, t.status, b.id as booking_id, b.customer_phone, m.title as movie_title, s.show_time
+    SELECT t.TicketNo, t.Barcode, t.jwt_token, t.SeatLabel, t.SeatType, t.Price, t.Date, t.Time, t.status,
+           b.BookingCode, b.customer_name, b.customer_phone, m.Title as movie_title, c.CinemaName, r.RoomNumber
     FROM ticket t
-    JOIN booking b ON t.booking_id = b.id
-    JOIN showtimes s ON b.showtime_id = s.id
-    JOIN movies m ON s.movie_id = m.id
+    JOIN booking b ON t.BookingID = b.BookingID
+    JOIN showtimes s ON t.ShowtimeID = s.ShowtimeID
+    JOIN movies m ON s.MovieID = m.MovieID
+    JOIN cinemas c ON t.CinemaID = c.CinemaID
+    JOIN rooms r ON s.RoomID = r.RoomID
     WHERE 1=1
   `;
     const params = [];
 
     if (code) {
-        query += ` AND (t.id = ? OR b.id = ?)`;
+        query += ` AND (t.TicketNo = ? OR b.BookingCode = ?)`;
         params.push(code, code);
     }
     if (phone) {
@@ -46,24 +50,43 @@ export const lookupTicket = async ({ code, phone }) => {
     return tickets;
 };
 
-export const cancelTicket = async (ticketId) => {
-    const ticket = await getTicketById(ticketId);
+export const cancelTicketAndRefund = async (ticketNo) => {
+    const [rows] = await pool.query(
+        `SELECT t.*, s.ShowDate, s.StartTime, b.BookingID, p.PaymentID, p.Amount
+     FROM ticket t
+     JOIN booking b ON t.BookingID = b.BookingID
+     JOIN showtimes s ON t.ShowtimeID = s.ShowtimeID
+     LEFT JOIN payment p ON b.BookingID = p.BookingID AND p.status = 'SUCCESS'
+     WHERE t.TicketNo = ?`,
+        [ticketNo]
+    );
 
-    // Kiểm tra thời gian: Chỉ cho hủy trước giờ chiếu tối thiểu 60 phút
-    const showTime = new Date(ticket.show_time).getTime();
-    const now = Date.now();
-    const diffMinutes = (showTime - now) / (1000 * 60);
+    if (!rows.length) throw new AppError('Không tìm thấy vé cần hủy', 404);
+    const ticket = rows[0];
+
+    // Kiểm tra thời gian: Trước giờ chiếu ít nhất 60 phút
+    const showDateTime = new Date(`${ticket.ShowDate.toISOString().split('T')[0]}T${ticket.StartTime}`);
+    const now = new Date();
+    const diffMinutes = (showDateTime.getTime() - now.getTime()) / (1000 * 60);
 
     if (diffMinutes < 60) {
-        throw new AppError('Chỉ có thể hủy vé trước giờ chiếu ít nhất 60 phút', 400);
+        throw new AppError('Chỉ được phép hủy vé trước giờ chiếu tối thiểu 60 phút', 400);
     }
 
-    if (ticket.status === 'CANCELLED') {
-        throw new AppError('Vé này đã bị hủy trước đó', 400);
+    if (ticket.status === 'CANCELED' || ticket.status === 'REFUNDED') {
+        throw new AppError('Vé này đã bị hủy hoặc hoàn tiền trước đó', 400);
     }
 
-    // Cập nhật trạng thái vé
-    await pool.query(`UPDATE ticket SET status = 'CANCELLED' WHERE id = ?`, [ticketId]);
+    // Đổi trạng thái vé
+    await pool.query(`UPDATE ticket SET status = 'REFUNDED' WHERE TicketNo = ?`, [ticketNo]);
 
-    return { ticketId, status: 'CANCELLED', message: 'Hủy vé thành công. Yêu cầu hoàn tiền đã gửi xử lý.' };
+    // Tạo record vào bảng refunds
+    const refundRef = `RF-${Date.now().toString().slice(-6)}`;
+    await pool.query(
+        `INSERT INTO refunds (RefundReference, BookingID, PaymentID, OriginalPaidAmount, CancellationFee, RefundAmount, RefundRatePercent, Reason, Status, RequestedAt, CompletedAt)
+     VALUES (?, ?, ?, ?, 0.00, ?, 100, 'Khách hàng yêu cầu hủy vé trên web trước 60 phút', 'COMPLETED', NOW(), NOW())`,
+        [refundRef, ticket.BookingID, ticket.PaymentID || 1, ticket.Price, ticket.Price]
+    );
+
+    return { ticketNo, status: 'REFUNDED', refundReference: refundRef, message: 'Hủy vé và tạo hoàn tiền thành công' };
 };

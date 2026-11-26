@@ -1,39 +1,75 @@
 import pool from '../config/db.js';
 
-export const findOrderById = async (orderId) => {
+export const findBookingById = async (bookingId) => {
     const [rows] = await pool.query(
         `SELECT b.*, TIMESTAMPDIFF(MINUTE, b.created_at, NOW()) as elapsed_minutes 
-     FROM booking b WHERE b.id = ?`,
-        [orderId]
+     FROM booking b WHERE b.BookingID = ?`,
+        [bookingId]
     );
     return rows[0] || null;
 };
 
-export const updateOrderCustomerInfo = async (orderId, { phone, email }) => {
+export const updateBookingCustomerInfo = async (bookingId, { name, phone, email, ageConfirmed }) => {
     await pool.query(
-        `UPDATE booking SET customer_phone = ?, customer_email = ? WHERE id = ?`,
-        [phone, email, orderId]
+        `UPDATE booking 
+     SET customer_name = ?, customer_phone = ?, customer_email = ?, age_confirmed = ?, age_confirmed_at = NOW() 
+     WHERE BookingID = ?`,
+        [name, phone, email, ageConfirmed, bookingId]
     );
 };
 
-export const updateOrderStatus = async (orderId, status, connection = pool) => {
-    await connection.query(`UPDATE booking SET status = ? WHERE id = ?`, [status, orderId]);
+export const updateBookingStatus = async (bookingId, status, connection = pool) => {
+    await connection.query(`UPDATE booking SET status = ? WHERE BookingID = ?`, [status, bookingId]);
 };
 
-export const saveTransactionLog = async ({ orderId, transactionId, amount, status, rawData }) => {
-    await pool.query(
-        `INSERT INTO audit_logs (action, target_id, details, created_at) 
-     VALUES ('PAYMENT_TRANSACTION', ?, ?, NOW())`,
-        [orderId, JSON.stringify({ transactionId, amount, status, rawData })]
+export const createPaymentRecord = async ({ bookingId, amount, transactionRef, status }, connection = pool) => {
+    const [result] = await connection.query(
+        `INSERT INTO payment (BookingID, Amount, Method, Partner, TransactionRef, status, created_at)
+     VALUES (?, ?, 'CAPTURE_WALLET', 'MOMO', ?, ?, NOW())`,
+        [bookingId, amount, transactionRef, status]
+    );
+    return result.insertId;
+};
+
+export const updatePaymentStatus = async (transactionRef, { momoTransId, status, log }, connection = pool) => {
+    await connection.query(
+        `UPDATE payment 
+     SET momo_trans_id = ?, status = ?, payment_time = NOW(), transaction_log = ? 
+     WHERE TransactionRef = ?`,
+        [momoTransId, status, JSON.stringify(log), transactionRef]
     );
 };
 
-export const createTicketsForOrder = async (orderId, ticketsData, connection = pool) => {
+export const markSeatsBooked = async (bookingId, connection = pool) => {
+    await connection.query(
+        `UPDATE order_seats SET SeatStatus = 'BOOKED' WHERE BookingID = ?`,
+        [bookingId]
+    );
+};
+
+export const createTicketsForBooking = async (ticketsData, connection = pool) => {
     for (const t of ticketsData) {
         await connection.query(
-            `INSERT INTO ticket (id, booking_id, seat_id, qr_code, status, price, created_at)
-       VALUES (?, ?, ?, ?, 'ACTIVE', ?, NOW())`,
-            [t.id, orderId, t.seatId, t.qrCode, t.price]
+            `INSERT INTO ticket 
+       (TicketNo, BookingID, ShowtimeID, SeatID, Barcode, jwt_token, Price, SeatRow, SeatNumber, SeatLabel, SeatType, CinemaID, RoomNumber, Gate, Date, Time, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'GATE 01', ?, ?, 'VALID', NOW())`,
+            [
+                t.ticketNo,
+                t.bookingId,
+                t.showtimeId,
+                t.seatId,
+                t.barcode,
+                t.jwtToken,
+                t.price,
+                t.seatRow,
+                t.seatNumber,
+                t.seatLabel,
+                t.seatType,
+                t.cinemaId,
+                t.roomNumber,
+                t.date,
+                t.time,
+            ]
         );
     }
 };
