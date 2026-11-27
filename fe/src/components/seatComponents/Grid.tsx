@@ -1,22 +1,26 @@
 import { useMemo } from 'react'
-import { Seat, SeatType, SeatStatus } from './Seat'
-import { Socket } from "../../Socket"
+import { Seat, type SeatType, type SeatStatus } from './Seat'
+
+/** 1 ghế lấy từ database (GET /api/showtimes/:id/seat-map) */
 export interface SeatData {
-  id: string
+  id: string // SeatID trong DB (dạng chuỗi)
   row: string
-  label: string
+  number: number
+  label: string // "A01", "H01-02" (ghế đôi)
   type: SeatType
-  isBooked: boolean
+  price: number // giá đã tính ở server cho suất này
 }
 
 interface GridProps {
   seats: SeatData[]
-  selected: string[]
+  /** Trạng thái được TÍNH khi render từ dữ liệu server, không lưu riêng trong state */
+  statusOf: (seatId: string) => SeatStatus
+  pending?: string[]
   onToggle: (id: string) => void
 }
 
-export const Grid = ({ seats, selected, onToggle }: GridProps) => {
-
+export const Grid = ({ seats, statusOf, pending = [], onToggle }: GridProps) => {
+  // Gom ghế theo hàng: [['A', [...]], ['B', [...]]]
   const rows = useMemo(() => {
     const map = new Map<string, SeatData[]>()
     seats.forEach(seat => {
@@ -28,27 +32,21 @@ export const Grid = ({ seats, selected, onToggle }: GridProps) => {
   }, [seats])
 
   return (
-    <div className="flex flex-col items-center gap-2 overflow-x-auto">
+    <div className="flex max-w-full flex-col items-center gap-2 overflow-x-auto px-4">
       {rows.map(([row, rowSeats]) => (
         <div key={row} className="flex justify-center gap-2">
-          {rowSeats.map(seat => {
-            const status: SeatStatus = seat.isBooked
-              ? 'unavailable'
-              : selected.includes(seat.id)
-              ? 'selected'
-              : 'available'
-
-            return (
-              <Seat
-                key={seat.id}
-                type={seat.type}
-                status={status}
-                onClick={() => onToggle(seat.id)}
-              >
-                {seat.label}
-              </Seat>
-            )
-          })}
+          {rowSeats.map(seat => (
+            <Seat
+              key={seat.id}
+              type={seat.type}
+              status={statusOf(seat.id)}
+              busy={pending.includes(seat.id)}
+              title={`${seat.label} • ${seat.price.toLocaleString('en-US')} ₫`}
+              onClick={() => onToggle(seat.id)}
+            >
+              {seat.label}
+            </Seat>
+          ))}
         </div>
       ))}
     </div>

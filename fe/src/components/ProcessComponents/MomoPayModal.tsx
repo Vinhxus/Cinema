@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, ShieldCheck, ArrowRight, X } from 'lucide-react';
 import momoLogo from '../../assets/momo.png';
+import { useBooking } from '../../context/useBooking';
+import { vnd } from '../../utils/currency';
 
 interface MomoPayModalProps {
     onClose?: () => void;
@@ -10,6 +12,7 @@ interface MomoPayModalProps {
 
 export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }) => {
     const navigate = useNavigate();
+    const { movie, showtime, selectedSeats, totals } = useBooking();
     const [timeLeft, setTimeLeft] = useState(585); // 09:45 đếm ngược
 
     useEffect(() => {
@@ -29,6 +32,8 @@ export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
     const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    const seatLabels = selectedSeats.map((s) => s.label).join(', ');
 
     return (
         <div className="w-full max-w-[500px] pay-card pay-font-primary pay-text-primary border border-gray-300 rounded-2xl p-6 shadow-sm relative">
@@ -60,7 +65,7 @@ export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }
             <div className="mt-4 bg-white border border-gray-300 rounded-xl p-3 flex items-center justify-between">
                 <div>
                     <span className="text-[10px] pay-text-secondary uppercase font-bold tracking-wider block">Amount to pay</span>
-                    <span className="text-xl font-black text-[#A50064] font-mono">390,000 ₫</span>
+                    <span className="text-xl font-black text-[#A50064] font-mono">{vnd(totals.total)}</span>
                 </div>
 
                 <div className="text-right">
@@ -134,9 +139,12 @@ export const MomoPayModal: React.FC<MomoPayModalProps> = ({ onClose, onSuccess }
                     <span>Order ID:</span>
                     <span className="font-mono pay-text-primary font-bold">MOMO-2024-88492X</span>
                 </div>
-                <div className="flex justify-between pay-text-secondary">
-                    <span>Movie & Showtime:</span>
-                    <span className="pay-text-primary">Dune 2 • 20:15 (Seats F12, F13)</span>
+                <div className="flex justify-between gap-3 pay-text-secondary">
+                    <span className="shrink-0">Movie & Showtime:</span>
+                    <span className="pay-text-primary text-right">
+                        {movie?.title ?? 'Dune 2'} • {showtime?.time ?? '20:15'}
+                        {seatLabels && ` (Seats ${seatLabels})`}
+                    </span>
                 </div>
             </div>
 

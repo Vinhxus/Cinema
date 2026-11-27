@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
 import { User, Mail, Ticket, Tag, Check } from 'lucide-react';
+import { useBooking } from '../../context/useBooking';
+import { vnd } from '../../utils/currency';
 
 export const CustomerInfo: React.FC = () => {
+    // Dữ liệu cần dùng ở bước sau (tên/sđt/email, voucher) -> context.
+    // Dữ liệu chỉ để UI trang này (checkbox, ô nhập đang gõ dở) -> useState cục bộ.
+    const { customer, updateCustomer, voucher, applyVoucher, removeVoucher, totals } = useBooking();
     const [saveProfile, setSaveProfile] = useState(true);
     const [sendZalo, setSendZalo] = useState(true);
-    const [promoCode, setPromoCode] = useState('CINEVIP10');
-    const [isApplied, setIsApplied] = useState(true);
+    const [promoCode, setPromoCode] = useState(voucher ?? '');
+    const [promoError, setPromoError] = useState<string | null>(null);
+
+    const handleApply = () => {
+        if (!promoCode.trim()) return;
+        const ok = applyVoucher(promoCode);
+        setPromoError(ok ? null : 'Invalid voucher code');
+    };
 
     return (
         <div className="space-y-6 pay-font-primary">
@@ -35,7 +46,9 @@ export const CustomerInfo: React.FC = () => {
                             <User className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pay-text-secondary" />
                             <input
                                 type="text"
-                                defaultValue="Alex Nguyen"
+                                value={customer.fullName}
+                                onChange={(e) => updateCustomer({ fullName: e.target.value })}
+                                placeholder="Alex Nguyen"
                                 className="w-full bg-white pay-text-primary text-xs rounded-lg pl-9 pr-3 py-2 border border-gray-300 focus:border-amber-500 outline-none transition"
                             />
                         </div>
@@ -53,8 +66,10 @@ export const CustomerInfo: React.FC = () => {
                                     <span>+84</span>
                                 </div>
                                 <input
-                                    type="text"
-                                    defaultValue="0912 345 678"
+                                    type="tel"
+                                    value={customer.phone}
+                                    onChange={(e) => updateCustomer({ phone: e.target.value })}
+                                    placeholder="0912 345 678"
                                     className="w-full bg-transparent pay-text-primary text-xs px-3 py-2 outline-none"
                                 />
                             </div>
@@ -68,7 +83,9 @@ export const CustomerInfo: React.FC = () => {
                                 <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pay-text-secondary" />
                                 <input
                                     type="email"
-                                    defaultValue="alex.nguyen@example.com"
+                                    value={customer.email}
+                                    onChange={(e) => updateCustomer({ email: e.target.value })}
+                                    placeholder="alex.nguyen@example.com"
                                     className="w-full bg-white pay-text-primary text-xs rounded-lg pl-9 pr-3 py-2 border border-gray-300 focus:border-amber-500 outline-none transition"
                                 />
                             </div>
@@ -120,30 +137,51 @@ export const CustomerInfo: React.FC = () => {
                         <input
                             type="text"
                             value={promoCode}
-                            onChange={(e) => setPromoCode(e.target.value)}
+                            onChange={(e) => {
+                                setPromoCode(e.target.value);
+                                setPromoError(null);
+                            }}
+                            onKeyDown={(e) => e.key === 'Enter' && handleApply()}
                             className="w-full bg-white pay-text-primary text-xs rounded-lg pl-9 pr-3 py-2.5 border border-gray-300 uppercase font-mono tracking-wider outline-none focus:border-amber-500"
-                            placeholder="ENTER VOUCHER CODE"
+                            placeholder="ENTER VOUCHER CODE (try CINEVIP10)"
                         />
                     </div>
-                    <button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold text-xs px-5 py-2.5 rounded-lg transition shadow-md shadow-amber-500/10">
+                    <button
+                        type="button"
+                        onClick={handleApply}
+                        className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold text-xs px-5 py-2.5 rounded-lg transition shadow-md shadow-amber-500/10 cursor-pointer"
+                    >
                         Apply Code
                     </button>
                 </div>
 
-                {isApplied && (
+                {promoError && (
+                    <p className="mt-2 text-[11px] text-rose-600">{promoError}</p>
+                )}
+
+                {voucher && (
                     <div className="mt-3 flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-lg">
                         <span className="flex items-center gap-1.5">
                             <Check className="w-3.5 h-3.5" />
-                            <span><strong>CINEVIP10</strong> applied (-25,000 VND VIP Cinephile Perk)</span>
+                            <span><strong>{voucher}</strong> applied (-{vnd(totals.voucherDiscount)})</span>
                         </span>
-                        <button onClick={() => setIsApplied(false)} className="pay-text-secondary hover:opacity-70">✕</button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                removeVoucher();
+                                setPromoCode('');
+                            }}
+                            className="pay-text-secondary hover:opacity-70 cursor-pointer"
+                        >
+                            ✕
+                        </button>
                     </div>
                 )}
 
                 <div className="mt-3 text-[11px] pay-text-secondary pay-font-secondary flex items-center gap-1.5">
                     <span className="text-amber-600 font-bold">★</span>
                     <span>Member Balance: <strong className="pay-text-primary">320 CinePoints</strong></span>
-                    <button className="text-amber-700 underline ml-1 hover:opacity-70 font-medium">Redeem</button>
+                    <button type="button" className="text-amber-700 underline ml-1 hover:opacity-70 font-medium">Redeem</button>
                 </div>
             </div>
         </div>

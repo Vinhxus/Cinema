@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Share2, Printer, Clock, Accessibility, Headphones } from 'lucide-react';
 
@@ -28,7 +27,7 @@ export default function InfoCards() {
 
                 <div className="flex items-center gap-4 text-xs text-gray-400">
                     <button
-                        onClick={() => alert('Đã sao chép liên kết chia sẻ vé!')}
+                        onClick={() => alert('Ticket share link copied!')}
                         className="flex items-center gap-1.5 hover:text-white transition cursor-pointer"
                     >
                         <Share2 className="w-3.5 h-3.5" />

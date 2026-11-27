@@ -5,6 +5,9 @@ import FoodPage from './pages/FoodPage'
 
 import Payment from './pages/Payment'
 import Processing from './pages/Processing'
+import PaymentResult from './pages/PaymentResult'
+import BookingHistory from './pages/BookingHistory'
+import BookingDetail from './pages/BookingDetail'
 import Successfull from './pages/Successfull'
 import Failure from './pages/Failure'
 import Refund from './pages/Refund'
@@ -20,21 +23,30 @@ import TicketCheckIn from './pages/TicketCheckIn'
 import { BookingProvider } from './context/Booking'
 import MovieDetail from './pages/MovieDetail'  
 import Chat from './pages/Chat'
+// Thư mục fe/src/labs không còn trong máy, import này làm Vite báo lỗi -> tạm tắt.
+// Nếu khôi phục lại labs thì bỏ comment 2 dòng (import + Route) là xong.
+// import LabRoutes from './labs/LabRoutes'
 
 function App() {
   return (
     <BookingProvider>
       <Routes>
+        {/* <Route path="/lab/*" element={<LabRoutes />} /> */}
         {/* User Booking Flow */}
         <Route path="/" element={<Homepage />} />
         <Route path="/chat" element={<Chat/>} />
         <Route path="/select-seat" element={<SelectSeat />} />
+        <Route path="/booking/:showtimeId" element={<SelectSeat />} />
         <Route path="/food" element={<FoodPage />} />
-        <Route path="/movie" element={<MovieDetail />} />        
+        <Route path="/movie" element={<MovieDetail />} />
+        <Route path="/movie/:id" element={<MovieDetail />} />        
 
         {/* Payment & Ticket Flow */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/processing" element={<Processing />} />
+        <Route path="/payment/result" element={<PaymentResult />} />
+        <Route path="/bookings" element={<BookingHistory />} />
+        <Route path="/bookings/:code" element={<BookingDetail />} />
         <Route path="/success" element={<Successfull />} />
         <Route path="/failure" element={<Failure />} />
         <Route path="/refund" element={<Refund />} />

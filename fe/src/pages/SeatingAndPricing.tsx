@@ -10,7 +10,6 @@ import {
   Settings,
   ChevronDown,
   Plus,
-  type LucideIcon,
 } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
@@ -34,7 +33,6 @@ const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
 
 const SEAT_ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const SEAT_COLS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-const COUPLE_SEATS = ['I01-02', 'I03-04', 'I05-06', 'I07-08'];
 
 function SidebarNavItem({
   item,
@@ -94,7 +92,7 @@ export default function SeatingAndPricing({
   const navigate = useNavigate();
 
   const handleNavClick = (tabId: AdminTabId) => {
-    const route = ADMIN_ROUTES[(typeof id !== 'undefined' ? (id as AdminTabId) : (tabId as AdminTabId))];
+    const route = ADMIN_ROUTES[tabId];
     if (route) navigate(route);
     if (onNavigate) {
       onNavigate(tabId);
@@ -363,7 +361,7 @@ export default function SeatingAndPricing({
             </div>
 
             <div className="mt-4 inline-block rounded border border-[#FEF08A] bg-[#FEF9C3] px-3 py-1.5 text-[11px] font-medium text-[#A16207]">
-              Example: Dune: Hành tinh cát 2 · 17:45, Tuesday 13/10 → VIP E06: 110,000 ₫ / ticket. Couple seats are sold in pairs only.
+              Example: Dune: Part Two · 17:45, Tuesday 13/10 → VIP E06: 110,000 ₫ / ticket. Couple seats are sold in pairs only.
             </div>
           </DashboardCard>
 

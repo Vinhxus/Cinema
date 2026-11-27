@@ -28,7 +28,7 @@ export const MainTicketCard: React.FC = () => {
                         </div>
 
                         <h2 className="text-2xl font-black pay-text-primary tracking-tight">Dune: Part Two</h2>
-                        <p className="text-xs pay-text-secondary font-medium">Hành Tinh Cát - Phần 2</p>
+                        <p className="text-xs pay-text-secondary font-medium">Dune: Part Two</p>
 
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 text-xs font-semibold border border-amber-500/20">
                             <Clock className="w-3.5 h-3.5" />
