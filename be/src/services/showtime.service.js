@@ -28,20 +28,20 @@ const SALES_CUTOFF_MINUTES = toPositiveInt(process.env.SALES_CUTOFF_MINUTES, 15)
 /** Nhãn tồn kho ghế: hết vé / sắp hết (<= ngưỡng) / còn nhiều. */
 function buildAvailability(availableSeats) {
   if (availableSeats <= 0) {
-    return { availability: 'sold_out', seatsLeft: 'Hết vé', isSoldOut: true };
+    return { availability: 'sold_out', seatsLeft: 'Sold out', isSoldOut: true };
   }
 
   if (availableSeats <= LOW_SEAT_THRESHOLD) {
     return {
       availability: 'few',
-      seatsLeft: `Chỉ còn ${availableSeats} ghế`,
+      seatsLeft: `Only ${availableSeats} seats left`,
       isSoldOut: false,
     };
   }
 
   return {
     availability: 'available',
-    seatsLeft: `Còn ${availableSeats} ghế`,
+    seatsLeft: `${availableSeats} seats left`,
     isSoldOut: false,
   };
 }

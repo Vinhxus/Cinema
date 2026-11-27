@@ -53,7 +53,7 @@ const MOVIES_DATA: MovieRecord[] = [
   {
     id: 'm-1',
     code: 'PH001',
-    title: 'Dune: Hành tinh cát 2',
+    title: 'Dune: Part Two',
     genre: 'Science fiction',
     duration: '166 min',
     rating: 'C13',
@@ -77,7 +77,7 @@ const MOVIES_DATA: MovieRecord[] = [
   {
     id: 'm-3',
     code: 'PH003',
-    title: 'Lật mặt 7: Một điều ước',
+    title: 'Face Off 7: One Wish',
     genre: 'Family · Drama',
     duration: '138 min',
     rating: 'C13',
@@ -89,7 +89,7 @@ const MOVIES_DATA: MovieRecord[] = [
   {
     id: 'm-4',
     code: 'PH004',
-    title: 'Đào, phở và piano',
+    title: 'Peach, Pho and Piano',
     genre: 'History · Drama',
     duration: '100 min',
     rating: 'C13',
@@ -113,7 +113,7 @@ const MOVIES_DATA: MovieRecord[] = [
   {
     id: 'm-6',
     code: 'PH006',
-    title: 'Những mảnh ghép cảm xúc 2',
+    title: 'Inside Out 2',
     genre: 'Animation · Family',
     duration: '96 min',
     rating: 'P',

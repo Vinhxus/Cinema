@@ -6,7 +6,7 @@ export default function TicketCard() {
 
     const copyBookingRef = () => {
         navigator.clipboard.writeText('CV-2024-88492X');
-        alert('Đã sao chép mã vé: CV-2024-88492X');
+        alert('Ticket code copied: CV-2024-88492X');
     };
 
     return (
@@ -89,7 +89,7 @@ export default function TicketCard() {
                                     SCI-FI / EPIC SAGA • ENGLISH WITH VIETNAMESE SUBTITLES
                                 </span>
                                 <h2 className="text-xl font-black text-gray-900 leading-tight">Dune: Part Two</h2>
-                                <p className="text-xs text-gray-500 font-medium mb-2">Hành Tinh Cát - Phần Hai</p>
+                                <p className="text-xs text-gray-500 font-medium mb-2">Dune: Part Two</p>
 
                                 <div className="text-[11px] text-gray-600 flex items-start gap-1">
                                     <span className="text-red-500 mt-0.5">📍</span>

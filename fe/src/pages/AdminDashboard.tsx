@@ -141,7 +141,7 @@ const UPCOMING_SCREENINGS: ScreeningRowData[] = [
   {
     id: 'scr-1',
     showtime: '17:45',
-    movie: 'Dune: Hành tinh cát 2',
+    movie: 'Dune: Part Two',
     screen: 'Screen 01',
     ticketsSold: '82/104',
     status: 'Check-in open',
@@ -159,7 +159,7 @@ const UPCOMING_SCREENINGS: ScreeningRowData[] = [
   {
     id: 'scr-3',
     showtime: '18:30',
-    movie: 'Lật mặt 7: Một điều ước',
+    movie: 'Face Off 7: One Wish',
     screen: 'Screen 03',
     ticketsSold: '64/88',
     status: 'Upcoming',
@@ -168,7 +168,7 @@ const UPCOMING_SCREENINGS: ScreeningRowData[] = [
   {
     id: 'scr-4',
     showtime: '19:00',
-    movie: 'Đào, phở và piano',
+    movie: 'Peach, Pho and Piano',
     screen: 'Screen 04',
     ticketsSold: '42/80',
     status: 'Upcoming',

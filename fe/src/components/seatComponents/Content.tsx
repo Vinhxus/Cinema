@@ -71,7 +71,7 @@ const Content = ({ info, selectedSeats, totalPrice, secondsLeft }: ContentProps)
           <div className={lineClass}>Room: {info?.roomName ?? '—'}</div>
           <div className={`break-words ${lineClass}`}>Seat: {seatText}</div>
           <div className={lineClass}>
-            Price: {totalPrice.toLocaleString('vi-VN')} vnđ
+            Price: {totalPrice.toLocaleString('en-US')} ₫
           </div>
         </div>
       </div>

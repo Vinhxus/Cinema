@@ -81,7 +81,7 @@ export default function MovieDetail() {
       .catch((err: unknown) => {
         if (!active) return;
         setDetail(null);
-        setDetailError(err instanceof Error ? err.message : "Không tải được thông tin phim.");
+        setDetailError(err instanceof Error ? err.message : "Couldn't load movie details.");
       })
       .finally(() => {
         if (active) setIsLoadingDetail(false);
@@ -125,7 +125,7 @@ export default function MovieDetail() {
         if (!active) return;
         setShowtimes(null);
         setSelectedShowtimeId(null);
-        setShowtimeError(err instanceof Error ? err.message : "Không tải được lịch chiếu.");
+        setShowtimeError(err instanceof Error ? err.message : "Couldn't load showtimes.");
       })
       .finally(() => {
         if (active) setIsLoadingShowtimes(false);
@@ -207,13 +207,13 @@ export default function MovieDetail() {
           {isLoadingDetail ? (
             <>
               <Loader2 className="h-6 w-6 animate-spin text-red-500" />
-              <p className="font-['Outfit'] text-sm text-slate-500">Đang tải thông tin phim…</p>
+              <p className="font-['Outfit'] text-sm text-slate-500">Loading movie details…</p>
             </>
           ) : (
             <>
               <AlertTriangle className="h-7 w-7 text-red-500" />
               <p className="font-['Outfit'] text-sm font-bold text-slate-800">
-                Không mở được trang phim
+                Couldn't open this movie
               </p>
               <p className="max-w-md text-center font-['Outfit'] text-xs text-slate-500">
                 {detailError}
@@ -225,13 +225,13 @@ export default function MovieDetail() {
                   className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 font-['Space_Grotesk'] text-xs font-semibold text-white transition hover:bg-slate-800"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
-                  Thử lại
+                  Try again
                 </button>
                 <Link
                   to="/"
                   className="rounded-lg border border-slate-300 px-4 py-2 font-['Space_Grotesk'] text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
-                  Về trang chủ
+                  Back to home
                 </Link>
               </div>
             </>
@@ -270,7 +270,7 @@ export default function MovieDetail() {
             {queryCinemaId > 0 && (
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2">
                 <p className="font-['Outfit'] text-[11px] text-amber-800">
-                  Đang chỉ hiện lịch chiếu của cụm rạp bạn chọn ở trang chủ.
+                  Showing only showtimes for the cinema you picked on the homepage.
                 </p>
                 <button
                   type="button"
@@ -281,18 +281,18 @@ export default function MovieDetail() {
                   }
                   className="font-['Space_Grotesk'] text-[11px] font-semibold text-amber-700 underline transition hover:text-amber-900"
                 >
-                  Xem tất cả cụm rạp
+                  View all cinemas
                 </button>
               </div>
             )}
 
             {totals && (
               <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-['Space_Grotesk'] text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                <span>{totals.cinemas} cụm rạp</span>
-                <span className="text-slate-600">{totals.showtimes} suất chiếu</span>
-                <span className="text-emerald-600">{totals.open} đang mở bán</span>
-                <span>{totals.soldOut} hết vé</span>
-                <span>{totals.closed} đã đóng</span>
+                <span>{totals.cinemas} cinemas</span>
+                <span className="text-slate-600">{totals.showtimes} showtimes</span>
+                <span className="text-emerald-600">{totals.open} on sale</span>
+                <span>{totals.soldOut} sold out</span>
+                <span>{totals.closed} closed</span>
               </div>
             )}
 
@@ -305,7 +305,7 @@ export default function MovieDetail() {
                   className="flex items-center gap-1.5 font-['Space_Grotesk'] text-[11px] font-semibold text-red-700 underline transition hover:text-red-900"
                 >
                   <RefreshCw className="h-3 w-3" />
-                  Tải lại lịch chiếu
+                  Reload showtimes
                 </button>
               </div>
             )}

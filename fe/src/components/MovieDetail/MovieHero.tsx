@@ -198,7 +198,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
                 <button
                   type="button"
                   onClick={() => setIsPlaying(false)}
-                  aria-label="Đóng trailer"
+                  aria-label="Close trailer"
                   className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-slate-950/80 text-white transition hover:bg-slate-950"
                 >
                   <X className="h-4 w-4" />
@@ -217,8 +217,8 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               type="button"
               onClick={handlePlayTrailer}
               disabled={!trailerUrl}
-              aria-label={trailerUrl ? "Play trailer" : "Trailer chưa cập nhật"}
-              title={trailerUrl ? "Play trailer" : "Trailer chưa cập nhật"}
+              aria-label={trailerUrl ? "Play trailer" : "Trailer coming soon"}
+              title={trailerUrl ? "Play trailer" : "Trailer coming soon"}
               className="absolute inset-0 m-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Play className="ml-0.5 h-6 w-6 fill-slate-950" />
@@ -248,7 +248,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
                     <SkipForward className="h-3.5 w-3.5" />
                   </button>
                   <span className="font-['Space_Grotesk'] text-[10px] text-slate-300">
-                    {trailerUrl ? "Official trailer" : "Trailer chưa cập nhật"}
+                    {trailerUrl ? "Official trailer" : "Trailer coming soon"}
                   </span>
                 </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, User2 } from "lucide-react";
+import { Bell, Ticket, User2 } from "lucide-react";
 import Logo from "./Logo";
 import { useBooking } from "../../context/useBooking";
 import type { AgeRating } from "../MovieComponents/MovieCard";
@@ -53,7 +53,7 @@ export default function Header() {
         .catch((err: unknown) => {
           if (cancelled) return;
           setResults([]);
-          setSearchError(err instanceof Error ? err.message : "Không tìm kiếm được phim.");
+          setSearchError(err instanceof Error ? err.message : "Movie search failed.");
           setOpen(true);
         })
         .finally(() => {
@@ -136,8 +136,8 @@ export default function Header() {
               onKeyDown={(event) => {
                 if (event.key === "Escape") setOpen(false);
               }}
-              placeholder="Tìm phim nhanh..."
-              aria-label="Tìm phim nhanh"
+              placeholder="Search movies..."
+              aria-label="Search movies"
               className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
             />
 
@@ -147,7 +147,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={resetSearch}
-                aria-label="Xoá từ khoá"
+                aria-label="Clear search"
                 className="shrink-0 cursor-pointer text-base leading-none text-slate-400 hover:text-slate-600"
               >
                 ×
@@ -158,7 +158,7 @@ export default function Header() {
           {open && (
             <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-96 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
               {searching && results.length === 0 && (
-                <p className="px-3 py-4 text-xs text-slate-500">Đang tìm phim…</p>
+                <p className="px-3 py-4 text-xs text-slate-500">Searching…</p>
               )}
 
               {!searching && searchError && (
@@ -167,7 +167,7 @@ export default function Header() {
 
               {!searching && !searchError && results.length === 0 && (
                 <p className="px-3 py-4 text-xs text-slate-500">
-                  Không tìm thấy phim phù hợp với &ldquo;{keyword.trim()}&rdquo;.
+                  No movies match &ldquo;{keyword.trim()}&rdquo;.
                 </p>
               )}
 
@@ -194,7 +194,7 @@ export default function Header() {
                       {movie.subtitle || movie.genre}
                     </p>
                     <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                      {movie.status === "COMING_SOON" ? "Sắp chiếu" : "Đang chiếu"} ·{" "}
+                      {movie.status === "COMING_SOON" ? "Coming soon" : "Now showing"} ·{" "}
                       {movie.genre}
                     </p>
                   </div>
@@ -210,6 +210,14 @@ export default function Header() {
           )}
         </div>
 
+        <Link
+          to="/bookings"
+          title="Booking history"
+          className="px-2 pt-2 pb-2.5 flex items-center gap-2 border-r whitespace-nowrap hover:opacity-70"
+        >
+          <Ticket />
+          <span className="hidden md:inline">My Tickets</span>
+        </Link>
         <button className="cursor-pointer px-2 pt-2 pb-2.5 justify-center border-r">
           <Bell />
         </button>

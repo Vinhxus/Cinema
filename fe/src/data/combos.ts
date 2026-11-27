@@ -109,9 +109,13 @@ export const COMBOS: Combo[] = [
 /** Giảm giá thành viên VIP áp lên phần bắp nước */
 export const VIP_DISCOUNT_RATE = 0.1
 
-/** Mã voucher hợp lệ -> số tiền được giảm (VND). Sau này sẽ lấy từ backend. */
+/**
+ * Mã voucher -> số tiền giảm (VND), CHỈ để hiển thị trước cho khách.
+ * Số tiền thật do backend tính (be/src/config/vouchers.js) — thêm mã mới thì sửa CẢ 2 chỗ.
+ */
 export const VOUCHERS: Record<string, number> = {
   CINEVIP10: 25000,
+  VINHDEPTRAI: 100000,
 }
 
 /** Tỉ lệ VAT đã bao gồm trong giá */

@@ -62,9 +62,9 @@ const TIMELINE_DATA: ScreenRow[] = [
     seats: 104,
     format: '2D',
     blocks: [
-      { id: 'b1-1', title: 'Dune: Hành tinh cát 2', timeRange: '10:30-13:16', subtitle: 'Completed', status: 'completed', leftPercent: 3.57, widthPercent: 19.76 },
+      { id: 'b1-1', title: 'Dune: Part Two', timeRange: '10:30-13:16', subtitle: 'Completed', status: 'completed', leftPercent: 3.57, widthPercent: 19.76 },
       { id: 'b1-2', title: 'Mai', timeRange: '13:36-15:47', subtitle: 'Completed', status: 'completed', leftPercent: 25.71, widthPercent: 15.59 },
-      { id: 'b1-3', title: 'Dune: Hành tinh cát 2', timeRange: '17:45-20:31', subtitle: '82/104 tickets', status: 'selected', leftPercent: 55.35, widthPercent: 19.76 },
+      { id: 'b1-3', title: 'Dune: Part Two', timeRange: '17:45-20:31', subtitle: '82/104 tickets', status: 'selected', leftPercent: 55.35, widthPercent: 19.76 },
       { id: 'b1-4', title: 'Mai', timeRange: '20:51-23:02', subtitle: '45/104 tickets', status: 'scheduled', leftPercent: 77.50, widthPercent: 15.59 },
     ],
   },
@@ -75,9 +75,9 @@ const TIMELINE_DATA: ScreenRow[] = [
     format: '2D',
     blocks: [
       { id: 'b2-1', title: 'Mai', timeRange: '11:00-13:11', subtitle: 'Completed', status: 'completed', leftPercent: 7.14, widthPercent: 15.59 },
-      { id: 'b2-2', title: 'Lật mặt 7', timeRange: '14:00-16:18', subtitle: 'Completed', status: 'completed', leftPercent: 28.57, widthPercent: 16.42 },
+      { id: 'b2-2', title: 'Face Off 7', timeRange: '14:00-16:18', subtitle: 'Completed', status: 'completed', leftPercent: 28.57, widthPercent: 16.42 },
       { id: 'b2-3', title: 'Mai', timeRange: '18:00-20:11', subtitle: '76/96 tickets', status: 'scheduled', leftPercent: 57.14, widthPercent: 15.59 },
-      { id: 'b2-4', title: 'Lật mặt 7', timeRange: '20:36-22:54', subtitle: '32/96 tickets', status: 'scheduled', leftPercent: 75.71, widthPercent: 16.42 },
+      { id: 'b2-4', title: 'Face Off 7', timeRange: '20:36-22:54', subtitle: '32/96 tickets', status: 'scheduled', leftPercent: 75.71, widthPercent: 16.42 },
     ],
   },
   {
@@ -86,9 +86,9 @@ const TIMELINE_DATA: ScreenRow[] = [
     seats: 88,
     format: '2D',
     blocks: [
-      { id: 'b3-1', title: 'Lật mặt 7', timeRange: '10:00-12:18', subtitle: 'Completed', status: 'completed', leftPercent: 0, widthPercent: 16.42 },
-      { id: 'b3-2', title: 'Dune: Hành tinh cát 2', timeRange: '13:00-15:46', subtitle: 'Completed', status: 'completed', leftPercent: 21.42, widthPercent: 19.76 },
-      { id: 'b3-3', title: 'Lật mặt 7', timeRange: '18:30-20:48', subtitle: '64/88 tickets', status: 'scheduled', leftPercent: 60.71, widthPercent: 16.42 },
+      { id: 'b3-1', title: 'Face Off 7', timeRange: '10:00-12:18', subtitle: 'Completed', status: 'completed', leftPercent: 0, widthPercent: 16.42 },
+      { id: 'b3-2', title: 'Dune: Part Two', timeRange: '13:00-15:46', subtitle: 'Completed', status: 'completed', leftPercent: 21.42, widthPercent: 19.76 },
+      { id: 'b3-3', title: 'Face Off 7', timeRange: '18:30-20:48', subtitle: '64/88 tickets', status: 'scheduled', leftPercent: 60.71, widthPercent: 16.42 },
       { id: 'b3-4', title: 'Mai', timeRange: '21:09-23:20', subtitle: '26/88 tickets', status: 'scheduled', leftPercent: 79.64, widthPercent: 15.59 },
     ],
   },
@@ -98,10 +98,10 @@ const TIMELINE_DATA: ScreenRow[] = [
     seats: 80,
     format: '2D',
     blocks: [
-      { id: 'b4-1', title: 'Đào, phở và piano', timeRange: '11:30-13:10', subtitle: 'Completed', status: 'completed', leftPercent: 10.71, widthPercent: 11.90 },
-      { id: 'b4-2', title: 'Đào, phở và piano', timeRange: '15:00-16:40', subtitle: 'Completed', status: 'completed', leftPercent: 35.71, widthPercent: 11.90 },
-      { id: 'b4-3', title: 'Đào, phở và piano', timeRange: '19:00-20:40', subtitle: '42/80 tickets', status: 'scheduled', leftPercent: 64.28, widthPercent: 11.90 },
-      { id: 'b4-4', title: 'Đào, phở và piano', timeRange: '21:00-22:40', subtitle: '18/80 tickets', status: 'scheduled', leftPercent: 78.57, widthPercent: 11.90 },
+      { id: 'b4-1', title: 'Peach, Pho and Piano', timeRange: '11:30-13:10', subtitle: 'Completed', status: 'completed', leftPercent: 10.71, widthPercent: 11.90 },
+      { id: 'b4-2', title: 'Peach, Pho and Piano', timeRange: '15:00-16:40', subtitle: 'Completed', status: 'completed', leftPercent: 35.71, widthPercent: 11.90 },
+      { id: 'b4-3', title: 'Peach, Pho and Piano', timeRange: '19:00-20:40', subtitle: '42/80 tickets', status: 'scheduled', leftPercent: 64.28, widthPercent: 11.90 },
+      { id: 'b4-4', title: 'Peach, Pho and Piano', timeRange: '21:00-22:40', subtitle: '18/80 tickets', status: 'scheduled', leftPercent: 78.57, widthPercent: 11.90 },
     ],
   },
 ];
@@ -396,7 +396,7 @@ export default function Showtimes({
             
             <DashboardCard className="lg:col-span-7 flex flex-col">
               <div className="flex items-start justify-between gap-4">
-                <h2 className="text-lg font-extrabold text-[#0F172A]">Dune: Hành tinh cát 2</h2>
+                <h2 className="text-lg font-extrabold text-[#0F172A]">Dune: Part Two</h2>
                 <span className="text-[11px] font-medium text-[#64748B]">Selected screening</span>
               </div>
 

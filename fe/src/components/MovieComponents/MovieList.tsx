@@ -39,7 +39,7 @@ export default function MovieList() {
       .catch((err: unknown) => {
         if (cancelled) return;
         setMovies([]);
-        setError(err instanceof Error ? err.message : "Không tải được danh sách phim.");
+        setError(err instanceof Error ? err.message : "Couldn't load the movie list.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -95,7 +95,7 @@ export default function MovieList() {
 
         <div className="mb-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
           <span className="text-amber-500">⟳</span>
-          Nguồn: <b className="text-slate-700">SENEMA API</b>
+          Source: <b className="text-slate-700">SENEMA API</b>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export default function MovieList() {
         <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-10 text-center">
           <p className="text-sm font-semibold text-red-600">{error}</p>
           <p className="mt-1 text-xs text-red-500">
-            Kiểm tra Backend đang chạy tại http://localhost:5000 rồi tải lại trang.
+            Make sure the backend is running at http://localhost:5000, then reload the page.
           </p>
         </div>
       ) : (
@@ -147,7 +147,7 @@ export default function MovieList() {
 
           {movies.length === 0 && (
             <p className="py-16 text-center text-sm text-slate-400">
-              Chưa có phim nào thuộc thể loại này.
+              No movies in this genre yet.
             </p>
           )}
         </>

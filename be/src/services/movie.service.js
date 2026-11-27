@@ -74,7 +74,7 @@ export async function getMovieById(movieId) {
   );
 
   if (!movie) {
-    throw new AppError(`Không tìm thấy phim có MovieID = ${movieId}.`, 404);
+    throw new AppError(`Movie not found (MovieID = ${movieId}).`, 404);
   }
 
   return movie;

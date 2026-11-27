@@ -361,7 +361,7 @@ export default function SeatingAndPricing({
             </div>
 
             <div className="mt-4 inline-block rounded border border-[#FEF08A] bg-[#FEF9C3] px-3 py-1.5 text-[11px] font-medium text-[#A16207]">
-              Example: Dune: Hành tinh cát 2 · 17:45, Tuesday 13/10 → VIP E06: 110,000 ₫ / ticket. Couple seats are sold in pairs only.
+              Example: Dune: Part Two · 17:45, Tuesday 13/10 → VIP E06: 110,000 ₫ / ticket. Couple seats are sold in pairs only.
             </div>
           </DashboardCard>
 

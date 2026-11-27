@@ -9,17 +9,17 @@ export const listMoviesQuerySchema = z.object({
     emptyToUndefined,
     z
       .enum(['now', 'upcoming', 'all'], {
-        error: 'status chỉ nhận: now | upcoming | all',
+        error: 'status must be one of: now | upcoming | all',
       })
       .optional()
   ),
   genre: z.preprocess(
     emptyToUndefined,
     z
-      .string({ error: 'Thể loại không hợp lệ' })
+      .string({ error: 'Invalid genre' })
       .trim()
-      .min(1, 'Thể loại không hợp lệ')
-      .max(100, 'Thể loại tối đa 100 ký tự')
+      .min(1, 'Invalid genre')
+      .max(100, 'Genre must be at most 100 characters')
       .optional()
   ),
 });
@@ -28,17 +28,17 @@ export const searchMoviesQuerySchema = z.object({
   q: z.preprocess(
     emptyToUndefined,
     z
-      .string({ error: 'Vui lòng nhập từ khoá tìm kiếm' })
+      .string({ error: 'Please enter a search keyword' })
       .trim()
-      .min(1, 'Vui lòng nhập từ khoá tìm kiếm')
-      .max(100, 'Từ khoá tối đa 100 ký tự')
+      .min(1, 'Please enter a search keyword')
+      .max(100, 'Keyword must be at most 100 characters')
   ),
 });
 
 /** Tham số đường dẫn /:id — MovieID là số nguyên dương. */
 export const movieIdParamSchema = z.object({
   id: z.coerce
-    .number({ error: 'MovieID không hợp lệ' })
-    .int('MovieID phải là số nguyên')
-    .positive('MovieID phải lớn hơn 0'),
+    .number({ error: 'Invalid MovieID' })
+    .int('MovieID must be an integer')
+    .positive('MovieID must be greater than 0'),
 });

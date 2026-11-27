@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Armchair, Popcorn, Lock, ShieldAlert, PhoneCall } from 'lucide-react';
 import { useBooking } from '../../context/useBooking';
@@ -6,6 +6,8 @@ import type { SeatType } from '../seatComponents/Seat';
 import { useCountdown } from '../../hooks/useCountdown';
 import { vnd } from '../../utils/currency';
 import dune from '../../assets/dune.png';
+import { createSepayPayment, redirectToCheckout } from '../../api/payments';
+import { getClientId } from '../../utils/clientId';
 
 const SEAT_LABEL: Record<SeatType, string> = {
     standard: 'Standard Seat',
@@ -41,6 +43,28 @@ export const OrderSummary: React.FC = () => {
         });
         return Array.from(map, ([type, g]) => ({ type, ...g }));
     }, [selectedSeats]);
+
+    // Gọi backend tạo đơn SePay rồi chuyển sang trang thanh toán của SePay
+    const [paying, setPaying] = useState(false);
+    const [payError, setPayError] = useState<string | null>(null);
+
+    const handlePay = async () => {
+        if (!showtime) return;
+        setPaying(true);
+        setPayError(null);
+        try {
+            const result = await createSepayPayment({
+                clientId: getClientId(),
+                showtimeId: showtime.showtimeId,
+                customer: { name: customer.fullName.trim(), phone: customer.phone.trim(), email: customer.email.trim() },
+                voucher, // chỉ gửi TÊN mã, server tự tính số tiền giảm
+            });
+            redirectToCheckout(result); // rời khỏi trang -> không cần setPaying(false)
+        } catch (e) {
+            setPayError(e instanceof Error ? e.message : 'Could not create the payment');
+            setPaying(false);
+        }
+    };
 
     // Chỉ cho bấm thanh toán khi form đã điền đủ
     const canPay =
@@ -110,7 +134,7 @@ export const OrderSummary: React.FC = () => {
                             {movie?.title ?? 'Dune: Part Two'}
                         </h3>
                         <p className="pay-text-secondary pay-font-secondary text-[10px] truncate mb-1.5">
-                            {movie?.subtitle ?? 'Hành Tinh Cát - Phần Hai'}
+                            {movie?.subtitle ?? 'Dune: Part Two'}
                         </p>
 
                         <p className="text-[10px] pay-text-primary font-medium">
@@ -230,16 +254,24 @@ export const OrderSummary: React.FC = () => {
                 <div className="pt-2">
                     <button
                         type="button"
-                        disabled={!canPay}
-                        onClick={() => navigate('/processing')}
+                        disabled={!canPay || paying}
+                        onClick={handlePay}
                         className="w-full bg-[#e50914] hover:bg-[#c90711] active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase tracking-wider transition shadow-lg shadow-red-950/30 cursor-pointer disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed disabled:active:scale-100"
                     >
                         <Lock className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>PROCEED TO PAYMENT ({vnd(totals.total)}) →</span>
+                        <span>{paying ? 'REDIRECTING TO SEPAY…' : `PROCEED TO PAYMENT (${vnd(totals.total)}) →`}</span>
                     </button>
+                    {payError && (
+                        <p className="mt-1.5 text-center text-[10px] text-rose-600">{payError}</p>
+                    )}
+                    {totals.fb > 0 && (
+                        <p className="mt-1.5 text-center text-[10px] text-amber-700">
+                            Note: the payment gateway currently charges tickets only (after voucher). Food &amp; drinks are not sent to the server yet.
+                        </p>
+                    )}
                     {!canPay && (
                         <p className="mt-1.5 text-center text-[10px] text-rose-600">
-                            Vui lòng điền đủ họ tên, số điện thoại và email hợp lệ.
+                            Please enter your full name, phone number and a valid email.
                         </p>
                     )}
                 </div>

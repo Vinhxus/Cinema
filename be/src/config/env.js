@@ -36,3 +36,21 @@ export const MAIL_CONFIG = {
   PASS: process.env.MAIL_PASS || '',
   FROM: process.env.MAIL_FROM || '"Cinema Ticket" <no-reply@cinema.com>',
 };
+// Cấu hình SePay Payment Gateway (cổng thanh toán, KHÔNG phải webhook tài khoản)
+// - MERCHANT_ID + SECRET_KEY: lấy ở Cổng thanh toán → Cấu hình → Thông tin đơn vị.
+//   SECRET_KEY dùng để KÝ form checkout -> chỉ được nằm ở backend.
+// - IPN_SECRET: chuỗi bạn tự đặt ở tab IPN (kiểu xác thực SECRET_KEY).
+//   SePay gửi lại chuỗi này trong header X-Secret-Key mỗi lần gọi IPN.
+export const SEPAY = {
+  ENV: process.env.SEPAY_ENV === 'production' ? 'production' : 'sandbox',
+  MERCHANT_ID: process.env.SEPAY_MERCHANT_ID || '',
+  SECRET_KEY: process.env.SEPAY_SECRET_KEY || '',
+  IPN_SECRET: process.env.SEPAY_IPN_SECRET || '',
+  // Thời gian tối đa cho khách ở trang SePay. Hạn giữ ghế được kéo dài tới
+  // ít nhất NOW() + PAYMENT_MINUTES khi khách bấm thanh toán.
+  PAYMENT_MINUTES: num(process.env.SEPAY_PAYMENT_MINUTES, 10),
+  // Số tiền tối thiểu của 1 đơn sau khi trừ voucher
+  MIN_AMOUNT: num(process.env.SEPAY_MIN_AMOUNT, 2000),
+  // IPN có thể đến trễ vài giây sau khi hết hạn -> chờ thêm chừng này rồi mới nhả ghế.
+  EXPIRE_GRACE_MINUTES: num(process.env.SEPAY_EXPIRE_GRACE_MINUTES, 2),
+};

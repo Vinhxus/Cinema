@@ -5,6 +5,9 @@ import FoodPage from './pages/FoodPage'
 
 import Payment from './pages/Payment'
 import Processing from './pages/Processing'
+import PaymentResult from './pages/PaymentResult'
+import BookingHistory from './pages/BookingHistory'
+import BookingDetail from './pages/BookingDetail'
 import Successfull from './pages/Successfull'
 import Failure from './pages/Failure'
 import Refund from './pages/Refund'
@@ -41,6 +44,9 @@ function App() {
         {/* Payment & Ticket Flow */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/processing" element={<Processing />} />
+        <Route path="/payment/result" element={<PaymentResult />} />
+        <Route path="/bookings" element={<BookingHistory />} />
+        <Route path="/bookings/:code" element={<BookingDetail />} />
         <Route path="/success" element={<Successfull />} />
         <Route path="/failure" element={<Failure />} />
         <Route path="/refund" element={<Refund />} />

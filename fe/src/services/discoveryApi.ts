@@ -159,7 +159,7 @@ async function request<T>(path: string): Promise<T> {
       headers: { Accept: "application/json" },
     });
   } catch {
-    throw new Error("Không kết nối được máy chủ API. Hãy chạy Backend tại cổng 5000.");
+    throw new Error("Can't reach the API server. Please start the backend on port 5000.");
   }
 
   let payload: ApiEnvelope<T> | null = null;
@@ -178,7 +178,7 @@ async function request<T>(path: string): Promise<T> {
     throw new Error(
       firstDetail ??
         payload?.error?.message ??
-        `Yêu cầu thất bại (HTTP ${response.status}).`
+        `Request failed (HTTP ${response.status}).`
     );
   }
 
@@ -493,7 +493,7 @@ export function mapMovieDetail(row: RawMovie): MovieDetailData {
     audienceScore,
     duration: row.Duration ? `${toNumber(row.Duration)} min` : "",
     tagline,
-    synopsis: row.Description?.trim() || "Nội dung phim đang được cập nhật.",
+    synopsis: row.Description?.trim() || "Synopsis coming soon.",
     director: row.Director ?? "",
     starring: row.Starring ?? "",
     formats: formats.length > 0 ? formats : ["2D"],

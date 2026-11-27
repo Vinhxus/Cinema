@@ -52,7 +52,7 @@ const Spot = () => {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Không tải được phim nổi bật.");
+        setError(err instanceof Error ? err.message : "Couldn't load featured movies.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -102,8 +102,8 @@ const Spot = () => {
               {featured
                 ? `· ${featured.genre} · ${featured.formats}`
                 : loading
-                  ? "· Đang tải phim đang chiếu"
-                  : "· Chưa có suất chiếu hôm nay"}
+                  ? "· Loading now-showing movies"
+                  : "· No showtimes today"}
             </span>
           </div>
         </div>
@@ -216,10 +216,10 @@ const Spot = () => {
       ) : (
         <div className="max-w-[672px] flex flex-col gap-2">
           <p className="text-white text-3xl font-bold font-['Outfit'] uppercase">
-            {loading ? "Đang tải phim nổi bật…" : "Chưa có phim đang chiếu"}
+            {loading ? "Loading featured movies…" : "No movies showing yet"}
           </p>
           <p className="text-slate-300 text-sm font-['Outfit']">
-            {error ?? "Dữ liệu sẽ hiển thị ngay khi API sẵn sàng."}
+            {error ?? "Data will appear as soon as the API is ready."}
           </p>
         </div>
       )}

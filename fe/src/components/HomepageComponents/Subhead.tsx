@@ -11,7 +11,7 @@ import {
   type ShowtimeDate,
 } from "../../services/discoveryApi";
 
-/** value của option "Tất cả cụm rạp". */
+/** value của option "All cinemas". */
 const ALL_CINEMAS = 0;
 
 const LABEL_ROW = "self-stretch inline-flex justify-start items-center gap-1.5";
@@ -66,7 +66,7 @@ const Subhead = () => {
       })
       .catch((err: unknown) => {
         if (!active) return;
-        setError(err instanceof Error ? err.message : "Không tải được dữ liệu phim/rạp.");
+        setError(err instanceof Error ? err.message : "Couldn't load movies and cinemas.");
       })
       .finally(() => {
         if (active) setLoadingMovies(false);
@@ -104,7 +104,7 @@ const Subhead = () => {
 
         setDates([]);
         setSelectedDate("");
-        setError(err instanceof Error ? err.message : "Không tải được lịch chiếu.");
+        setError(err instanceof Error ? err.message : "Couldn't load showtimes.");
       })
       .finally(() => {
         if (active) setLoadingDates(false);
@@ -151,7 +151,7 @@ const Subhead = () => {
           <div className="self-stretch relative flex flex-col justify-start items-start">
             <div className={SELECT_WRAPPER}>
               <select
-                aria-label="Chọn phim"
+                aria-label="Select movie"
                 value={selectedMovieId ?? ""}
                 onChange={(event) =>
                   setSelectedMovieId(Number(event.target.value) || null)
@@ -160,9 +160,9 @@ const Subhead = () => {
                 className={SELECT_INPUT}
               >
                 {loadingMovies ? (
-                  <option value="">Đang tải phim…</option>
+                  <option value="">Loading movies…</option>
                 ) : movies.length === 0 ? (
-                  <option value="">Chưa có phim đang chiếu</option>
+                  <option value="">No movies showing yet</option>
                 ) : (
                   movies.map((movie) => (
                     <option key={movie.id} value={movie.id}>
@@ -187,7 +187,7 @@ const Subhead = () => {
           <div className="self-stretch relative flex flex-col justify-start items-start">
             <div className={SELECT_WRAPPER}>
               <select
-                aria-label="Chọn cụm rạp"
+                aria-label="Select cinema"
                 value={selectedCinemaId}
                 onChange={(event) =>
                   setSelectedCinemaId(Number(event.target.value) || ALL_CINEMAS)
@@ -195,7 +195,7 @@ const Subhead = () => {
                 disabled={cinemas.length === 0}
                 className={SELECT_INPUT}
               >
-                <option value={ALL_CINEMAS}>Tất cả cụm rạp</option>
+                <option value={ALL_CINEMAS}>All cinemas</option>
                 {cinemas.map((cinema) => (
                   <option key={cinema.cinemaId} value={cinema.cinemaId}>
                     {cinema.label || cinema.name}
@@ -217,9 +217,9 @@ const Subhead = () => {
           </div>
           <div className="self-stretch relative flex flex-col justify-start items-start">
             <div className="self-stretch h-12 p-1 bg-slate-100 rounded-xl outline outline-slate-200/80 inline-flex justify-start items-center gap-1 overflow-x-auto">
-              {loadingDates && <span className={MUTED_TEXT}>Đang tải…</span>}
+              {loadingDates && <span className={MUTED_TEXT}>Loading…</span>}
               {!loadingDates && dates.length === 0 && (
-                <span className={MUTED_TEXT}>Chưa có suất chiếu</span>
+                <span className={MUTED_TEXT}>No showtimes yet</span>
               )}
               {!loadingDates &&
                 dates.map((item) => {
@@ -231,7 +231,7 @@ const Subhead = () => {
                       type="button"
                       onClick={() => setSelectedDate(item.date)}
                       aria-pressed={isActive}
-                      title={`${item.fullName} · ${item.total} suất chiếu`}
+                      title={`${item.fullName} · ${item.total} showtimes`}
                       className={
                         isActive
                           ? "shrink-0 px-2 py-1 bg-white rounded-lg shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-red-100 inline-flex flex-col justify-center items-center"

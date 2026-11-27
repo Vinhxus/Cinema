@@ -49,14 +49,14 @@ export default function Chat() {
       <header style={styles.header}>
         <strong>Chat test</strong>
         <span style={{ color: connected ? "#15803d" : "#b91c1c" }}>
-          {connected ? `Đã kết nối (${Socket.id})` : "Mất kết nối"}
+          {connected ? `Connected (${Socket.id})` : "Disconnected"}
         </span>
       </header>
 
       <div style={styles.list}>
         {messages.length === 0 && (
           <p style={styles.empty}>
-            Chưa có tin nhắn. Mở trang này ở 2 tab để thử gửi qua lại.
+            No messages yet. Open this page in 2 tabs to try chatting.
           </p>
         )}
 
@@ -75,7 +75,7 @@ export default function Chat() {
               {!mine && <div style={styles.sender}>{m.id.slice(0, 5)}</div>}
               <div>{m.text}</div>
               <div style={styles.time}>
-                {new Date(m.time).toLocaleTimeString("vi-VN", {
+                {new Date(m.time).toLocaleTimeString("en-GB", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
@@ -90,12 +90,12 @@ export default function Chat() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Nhập tin nhắn..."
+          placeholder="Type a message..."
           disabled={!connected}
           style={styles.input}
         />
         <button type="submit" disabled={!connected || !input.trim()} style={styles.button}>
-          Gửi
+          Send
         </button>
       </form>
     </div>

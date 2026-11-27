@@ -58,12 +58,12 @@ export default function ShowtimeSelector({
           {isLoading ? (
             <>
               <Loader2 className="h-3 w-3 animate-spin" />
-              Đang tải suất chiếu
+              Loading showtimes
             </>
           ) : (
             <>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Ghế trống cập nhật trực tiếp từ rạp
+              Live seat availability from the cinema
             </>
           )}
         </div>
@@ -111,7 +111,7 @@ export default function ShowtimeSelector({
                   active ? "text-red-500" : "text-slate-400"
                 }`}
               >
-                {date.slots} suất
+                {date.slots} {date.slots === 1 ? "show" : "shows"}
               </span>
             </button>
           );
@@ -168,9 +168,9 @@ export default function ShowtimeSelector({
                       aria-pressed={active}
                       title={
                         showtime.isClosed
-                          ? "Đã đóng bán vé (sát giờ chiếu)"
+                          ? "Sales closed (too close to showtime)"
                           : showtime.isSoldOut
-                            ? "Suất chiếu đã hết vé"
+                            ? "Sold out"
                             : showtime.seatsLeft
                       }
                       className={`rounded-lg border px-3 py-2 text-left transition ${
@@ -216,7 +216,7 @@ export default function ShowtimeSelector({
 
       {!hasShowtimes && !isLoading && (
         <p className="py-10 text-center font-['Outfit'] text-sm text-slate-400">
-          Ngày này chưa có suất chiếu. Hãy chọn ngày khác.
+          No showtimes on this date. Please pick another day.
         </p>
       )}
     </section>

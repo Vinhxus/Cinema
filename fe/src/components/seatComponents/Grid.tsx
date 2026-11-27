@@ -41,7 +41,7 @@ export const Grid = ({ seats, statusOf, pending = [], onToggle }: GridProps) => 
               type={seat.type}
               status={statusOf(seat.id)}
               busy={pending.includes(seat.id)}
-              title={`${seat.label} • ${seat.price.toLocaleString('vi-VN')} đ`}
+              title={`${seat.label} • ${seat.price.toLocaleString('en-US')} ₫`}
               onClick={() => onToggle(seat.id)}
             >
               {seat.label}

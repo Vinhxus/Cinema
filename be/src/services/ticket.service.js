@@ -15,13 +15,13 @@ export const getTicketByNo = async (ticketNo) => {
         [ticketNo, ticketNo]
     );
 
-    if (!rows.length) throw new AppError('Không tìm thấy thông tin vé', 404);
+    if (!rows.length) throw new AppError('Ticket not found', 404);
     return rows;
 };
 
 export const lookupTickets = async ({ code, phone }) => {
     if (!code && !phone) {
-        throw new AppError('Vui lòng cung cấp mã vé/đơn hàng hoặc số điện thoại tra cứu', 400);
+        throw new AppError('Please provide a ticket/booking code or a phone number', 400);
     }
 
     let query = `
@@ -61,7 +61,7 @@ export const cancelTicketAndRefund = async (ticketNo) => {
         [ticketNo]
     );
 
-    if (!rows.length) throw new AppError('Không tìm thấy vé cần hủy', 404);
+    if (!rows.length) throw new AppError('Ticket to cancel not found', 404);
     const ticket = rows[0];
 
     // Kiểm tra thời gian: Trước giờ chiếu ít nhất 60 phút
@@ -70,11 +70,11 @@ export const cancelTicketAndRefund = async (ticketNo) => {
     const diffMinutes = (showDateTime.getTime() - now.getTime()) / (1000 * 60);
 
     if (diffMinutes < 60) {
-        throw new AppError('Chỉ được phép hủy vé trước giờ chiếu tối thiểu 60 phút', 400);
+        throw new AppError('Tickets can only be cancelled at least 60 minutes before showtime', 400);
     }
 
     if (ticket.status === 'CANCELED' || ticket.status === 'REFUNDED') {
-        throw new AppError('Vé này đã bị hủy hoặc hoàn tiền trước đó', 400);
+        throw new AppError('This ticket has already been cancelled or refunded', 400);
     }
 
     // Đổi trạng thái vé
@@ -84,9 +84,9 @@ export const cancelTicketAndRefund = async (ticketNo) => {
     const refundRef = `RF-${Date.now().toString().slice(-6)}`;
     await pool.query(
         `INSERT INTO refunds (RefundReference, BookingID, PaymentID, OriginalPaidAmount, CancellationFee, RefundAmount, RefundRatePercent, Reason, Status, RequestedAt, CompletedAt)
-     VALUES (?, ?, ?, ?, 0.00, ?, 100, 'Khách hàng yêu cầu hủy vé trên web trước 60 phút', 'COMPLETED', NOW(), NOW())`,
+     VALUES (?, ?, ?, ?, 0.00, ?, 100, 'Customer cancelled on the website at least 60 minutes before showtime', 'COMPLETED', NOW(), NOW())`,
         [refundRef, ticket.BookingID, ticket.PaymentID || 1, ticket.Price, ticket.Price]
     );
 
-    return { ticketNo, status: 'REFUNDED', refundReference: refundRef, message: 'Hủy vé và tạo hoàn tiền thành công' };
+    return { ticketNo, status: 'REFUNDED', refundReference: refundRef, message: 'Ticket cancelled and refund created' };
 };

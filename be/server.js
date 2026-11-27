@@ -10,6 +10,7 @@ import { sendError } from './src/utils/response.js';
 import { CLIENT_URL } from './src/config/env.js';
 import { createSocketServer } from './src/sockets/index.js';
 import { startHoldSweeper } from './src/jobs/holdSweeper.js';
+import { startPaymentSweeper } from './src/jobs/paymentSweeper.js';
 
 const app = express();
 
@@ -37,6 +38,7 @@ const httpServer = createServer(app);
 export const io = createSocketServer(httpServer);
 
 startHoldSweeper();
+startPaymentSweeper();
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => console.log(`Server on :${PORT}`));

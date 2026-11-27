@@ -99,7 +99,7 @@ export default function TicketCheckIn({
   onNavigate,
 }: TicketCheckInProps) {
   const [selectedGate, setSelectedGate] = useState('Gate 01 · Screen 01');
-  const [selectedMovie, setSelectedMovie] = useState('17:45 · Dune: Hành tinh cát 2');
+  const [selectedMovie, setSelectedMovie] = useState('17:45 · Dune: Part Two');
   const [manualLookupValue, setManualLookupValue] = useState('SN-261013-002481');
 
   const navigate = useNavigate();
@@ -165,7 +165,7 @@ export default function TicketCheckIn({
               </div>
               <div className="relative inline-flex items-center">
                 <select value={selectedMovie} onChange={(e) => setSelectedMovie(e.target.value)} className="h-9 appearance-none rounded-lg border border-[#E2E8F0] bg-white pr-9 pl-3 text-xs font-medium text-[#0F172A]">
-                  <option value="17:45 · Dune: Hành tinh cát 2">17:45 · Dune: Hành tinh cát 2</option>
+                  <option value="17:45 · Dune: Part Two">17:45 · Dune: Part Two</option>
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-[#64748B]" />
               </div>
@@ -255,7 +255,7 @@ export default function TicketCheckIn({
                   </div>
                 </div>
 
-                <h3 className="text-base font-extrabold text-[#0F172A]">Dune: Hành tinh cát 2</h3>
+                <h3 className="text-base font-extrabold text-[#0F172A]">Dune: Part Two</h3>
                 <div className="text-xs text-[#64748B] mt-0.5">13/10/2026 · 17:45–20:31 · 2D · Vietnamese subs</div>
 
                 <div className="grid grid-cols-3 gap-4 mt-5 mb-5">

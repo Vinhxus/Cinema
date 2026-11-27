@@ -32,7 +32,7 @@ export function MovieCard({ movie }: MovieCardProps) {
   return (
     <Link
       to={`/movie/${movie.id}`}
-      title={`Xem chi tiết: ${movie.title}`}
+      title={`View details: ${movie.title}`}
       className="group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
       onClick={() => selectMovie(movie)}
     >

@@ -6,6 +6,7 @@ import cinemaRoutes from './cinema.routes.js';
 import showtimeRoutes from './showtime.routes.js';
 import paymentRoutes from './payment.routes.js';
 import ticketRoutes from './ticket.routes.js';
+import bookingRoutes from './booking.routes.js';
 //import authRoutes from './auth.routes.js';
 
 const router = Router();
@@ -30,6 +31,7 @@ router.use('/cinemas', cinemaRoutes);
 router.use('/showtimes', showtimeRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/tickets', ticketRoutes);
+router.use('/bookings', bookingRoutes);
 
 //router.use('/auth', authRoutes);
 

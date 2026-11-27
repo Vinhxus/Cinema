@@ -15,7 +15,7 @@ export const CustomerInfo: React.FC = () => {
     const handleApply = () => {
         if (!promoCode.trim()) return;
         const ok = applyVoucher(promoCode);
-        setPromoError(ok ? null : 'Mã voucher không hợp lệ');
+        setPromoError(ok ? null : 'Invalid voucher code');
     };
 
     return (
